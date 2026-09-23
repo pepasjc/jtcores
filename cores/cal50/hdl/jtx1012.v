@@ -19,8 +19,6 @@ module jtx1012(
     input              hs, flip,
     input        [8:0] vdump,
     input        [8:0] hdump,
-    // tilemap scroll origin, per game (jtframe_scroll: scrx left)
-    input       [15:0] hoffs,
     // Video RAM
     output     [13:1] vram_addr,
     input      [15:0] vram_dout,
