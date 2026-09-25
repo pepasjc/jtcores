@@ -40,7 +40,13 @@ always @(posedge clk) begin
     endcase
 end
 /* verilator tracing_off */
+wire [7:0] ra_din8;
+assign ra_game_din = {2{ra_din8}}; // RetroAchievements tap data
+
 jtbubl_main u_main(
+    .ra_addr        ( ra_game_addr  ),
+    .ra_din         ( ra_din8       ),
+    .ra_we          ( ra_game_we    ),
     .rst            ( rst           ),
     .clk            ( clk           ),        // 24 MHz
     .cen6           ( cen6          ),

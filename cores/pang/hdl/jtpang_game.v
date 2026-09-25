@@ -65,6 +65,8 @@ always @(posedge clk) begin
     end
 end
 
+assign ra_game_din = {2{cpu_dout}}; // RetroAchievements tap data
+
 jtpang_main u_main(
     .rst         ( rst          ),
     .clk         ( clk          ),
@@ -130,6 +132,8 @@ jtpang_main u_main(
     .debug_bus   ( debug_bus    ),
     // ROM
     .rom_addr    ( main_addr    ),
+    .ra_addr     ( ra_game_addr ),
+    .ra_we       ( ra_game_we   ),
     .rom_cs      ( main_cs      ),
     .rom_data    ( main_data    ),
     .rom_ok      ( main_ok      )

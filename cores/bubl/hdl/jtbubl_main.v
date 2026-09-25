@@ -62,7 +62,12 @@ module jtbubl_main(
     input               tilt,
     input      [ 7:0]   dipsw_a,
     input      [ 7:0]   dipsw_b,
-    input      [ 7:0]   debug_bus
+    input      [ 7:0]   debug_bus,
+    // RetroAchievements tap: FBNeo's Bubble Bobble All Ram has SharedRam
+    // (main/sub 0xE000-0xF7FF, u_work below) at 0x3300
+    output     [15:0]   ra_addr,
+    output     [ 7:0]   ra_din,
+    output     [ 1:0]   ra_we
 );
 
 `ifndef NOMAIN
@@ -257,6 +262,13 @@ always @(*) begin
     work_addr= lde ? main_addr[12:0] : sub_addr[12:0];
 end
 */
+// RetroAchievements tap on both u_work write ports (main wins a same-cycle clash)
+wire        ra_main = ~main_wrn & lde;
+wire        ra_sub  = ~sub_wrn & sub_work_cs;
+assign ra_addr = 16'h3300 + { 3'd0, ra_main ? main_addr[12:0] : sub_addr[12:0] };
+assign ra_din  = ra_main ? main_dout : sub_dout;
+assign ra_we   = {2{ra_main | ra_sub}} & (ra_addr[0] ? 2'b10 : 2'b01);
+
 // Time shared
 jtframe_dual_ram #(.AW(13)) u_work(
     .clk0   ( clk             ),

@@ -650,6 +650,9 @@ assign { ra_tap_addr, ra_tap_din, ra_tap_we } =
 {{- range $cnt, $bus:=.BRAM }}{{ if $bus.Ra_tap }}
     |ra_tap_{{$bus.Name}}_we ? { ra_tap_{{$bus.Name}}_addr, ra_tap_{{$bus.Name}}_din, ra_tap_{{$bus.Name}}_we } :{{ end }}{{ if and $bus.Dual_port.Name $bus.Dual_port.Ra_tap }}
     |ra_tap_{{$bus.Dual_port.Name}}_we ? { ra_tap_{{$bus.Dual_port.Name}}_addr, ra_tap_{{$bus.Dual_port.Name}}_din, ra_tap_{{$bus.Dual_port.Name}}_we } :{{ end }}{{ end }}
+{{- range .Ports }}{{ if eq .Name "ra_game_we" }}
+    // RAM the game module taps itself (mem.yaml ports ra_game_addr/din/we)
+    |ra_game_we ? { ra_game_addr, ra_game_din, ra_game_we } :{{ end }}{{ end }}
     34'd0;
 `endif
 

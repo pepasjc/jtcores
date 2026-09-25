@@ -6,6 +6,11 @@ audio:
     # 2nd order filter at 20kHz on the board, replaced with
     # a 1st order for the channel. There is another global 1st order filter at 20kHz
     - { name:  fm, module: jt2413, rsum: 22k, rc: [{r:  8k, c: 1.0n}], pre: 0.1 }
+# RetroAchievements tap driven by jtpang_main (Z80 work RAM + video RAM bank 0)
+ports:
+  - { name: ra_game_addr, msb: 15 }
+  - { name: ra_game_din,  msb: 15 }
+  - { name: ra_game_we,   msb: 1 }
 sdram:
   banks:
     - buses: [ { name: main, addr_width: 20, data_width:  8 } ]

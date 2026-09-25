@@ -64,6 +64,10 @@ module jtpang_main(
     input       [7:0]   debug_bus,
     // ROM access
     output reg   [19:0] rom_addr,
+    // RetroAchievements tap: FBNeo's Pang All Ram has the Z80 RAM (0xE000) at 0
+    // and VideoRam (0xD000, bank 0) at 0x3800
+    output       [15:0] ra_addr,
+    output       [ 1:0] ra_we,
     output reg          rom_cs,
     input        [ 7:0] rom_data,
     input               rom_ok
@@ -127,6 +131,10 @@ always @* begin
 end
 
 assign LHVBLK = LHBL | LVBL;
+
+wire ra_vram = vram_cs && !vram_msb;
+assign ra_addr = ra_vram ? 16'h3800 + {4'd0, A[11:0]} : {3'd0, A[12:0]};
+assign ra_we   = {2{!wr_n && (ram_cs || ra_vram)}} & (ra_addr[0] ? 2'b10 : 2'b01);
 
 always @(posedge clk, posedge rst) begin
     if( rst ) begin

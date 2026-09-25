@@ -20,3 +20,9 @@ JTFRAME_HEADER=4
 [mister]
 JTFRAME_ARX=5
 JTFRAME_ARY=4
+
+[mister]
+# RetroAchievements: shared RAM tapped in jtbubl_main (mem.yaml ports)
+JTFRAME_RA_MIRROR
+JTFRAME_RA_TAP
+JTFRAME_RA_AW=15
