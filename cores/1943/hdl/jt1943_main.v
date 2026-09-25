@@ -73,7 +73,10 @@ module jt1943_main #(
     input    [7:0]     dipsw_b,
     input    [7:0]     dipsw_c,
     input              dip_pause,
-    output reg         coin_cnt
+    output reg         coin_cnt,
+    // RetroAchievements tap (see mem.yaml ports)
+    output   [15:0]    ra_addr,
+    output   [ 1:0]    ra_we
 );
 `ifndef NOMAIN
 localparam CHON_BIT  = GAME==0 ? 7 : 6;
@@ -431,4 +434,8 @@ jtframe_z80 u_cpu(
     initial rom_addr    = 0;
     initial coin_cnt    = 0;
 `endif
+// RetroAchievements tap: E000-EFFF = FBNeo 0, sprite RAM F000-FFFF = FBNeo 0x2000
+assign ra_addr = {2'd0, A[12], 1'b0, A[11:0]};
+assign ra_we   = {2{RAM_we}} & (ra_addr[0] ? 2'b10 : 2'b01);
+
 endmodule

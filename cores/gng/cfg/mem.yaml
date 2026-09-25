@@ -2,6 +2,11 @@ include:
   - file: audio.yaml
 params:
   - { name: SND_OFFSET, value: "(`SND_START-`JTFRAME_BA1_START)>>1" }
+# RetroAchievements tap driven by the main CPU module
+ports:
+  - { name: ra_game_addr, msb: 15 }
+  - { name: ra_game_din,  msb: 15 }
+  - { name: ra_game_we,   msb: 1 }
 sdram:
   banks:
     - buses:

@@ -19,3 +19,9 @@ JTFRAME_BA2_START =0x18000
 JTFRAME_BA3_START =0x2a000
 JTFRAME_PROM_START=0x3a000
 OBJ_OFFSET=0x1000
+
+[mister]
+# RetroAchievements: work RAM tapped in the main CPU module (mem.yaml ports)
+JTFRAME_RA_MIRROR
+JTFRAME_RA_TAP
+JTFRAME_RA_AW=13

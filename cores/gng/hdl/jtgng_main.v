@@ -52,7 +52,10 @@ module jtgng_main(
     input              service,
     input              dip_pause,
     input  [7:0]       dipsw_a,
-    input  [7:0]       dipsw_b
+    input  [7:0]       dipsw_b,
+    // RetroAchievements tap (see mem.yaml ports)
+    output   [15:0]    ra_addr,
+    output   [ 1:0]    ra_we
 );
 `ifndef NOMAIN
 wire [15:0] A;
@@ -218,4 +221,8 @@ assign rom_addr = 0, char_cs = 0, scr_cs   = 0, blue_cs   = 0, redgreen_cs = 0,
        cpu_AB   = 0;
 initial rom_cs  = 0;
 `endif
+// RetroAchievements tap: 6809 work RAM 0000-1DFF = FBNeo All Ram 0
+assign ra_addr = {3'd0, A[12:0]};
+assign ra_we   = {2{ram_cs & ~RnW}} & (ra_addr[0] ? 2'b10 : 2'b01);
+
 endmodule

@@ -58,7 +58,11 @@ jtframe_crossclk_cen u_mcu_cen(
     .cen_out    ( mcu_cen   )
 );
 
+assign ra_game_din = {2{cpu_dout}}; // RetroAchievements tap data
+
 jt1943_main u_main(
+    .ra_addr    ( ra_game_addr  ),
+    .ra_we      ( ra_game_we    ),
     .rst        ( rst           ),
     .clk        ( clk           ),
     .cpu_cen    ( cpu_cen       ),

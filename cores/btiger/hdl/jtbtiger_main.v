@@ -64,7 +64,10 @@ module jtbtiger_main(
     input              service,
     input              dip_pause,
     input    [7:0]     dipsw_a,
-    input    [7:0]     dipsw_b
+    input    [7:0]     dipsw_b,
+    // RetroAchievements tap (see mem.yaml ports)
+    output   [15:0]    ra_addr,
+    output   [ 1:0]    ra_we
 );
 
 `ifndef NOMAIN
@@ -341,5 +344,9 @@ initial begin
     rom_cs=0; rom_addr=0;
 end
 `endif
+
+// RetroAchievements tap: Z80 work RAM E000-FDFF = FBNeo All Ram 0
+assign ra_addr = {3'd0, A[12:0]};
+assign ra_we   = {2{RAM_we}} & (ra_addr[0] ? 2'b10 : 2'b01);
 
 endmodule

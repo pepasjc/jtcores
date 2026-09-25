@@ -71,7 +71,11 @@ jtgng_timer u_timer(
     .Vinit     (          )
 );
 
+assign ra_game_din = {2{cpu_dout}}; // RetroAchievements tap data
+
 jtbtiger_main u_main(
+    .ra_addr    ( ra_game_addr  ),
+    .ra_we      ( ra_game_we    ),
     .rst        ( rst           ),
     .clk        ( clk           ),
     .cen6       ( cen6          ),

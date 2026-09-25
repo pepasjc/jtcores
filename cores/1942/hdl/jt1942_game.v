@@ -67,7 +67,11 @@ always @(posedge clk) begin
     eff_flip <= dip_flip ^ flip_xor;
 end
 /* verilator tracing_off */
+assign ra_game_din = {2{cpu_dout}}; // RetroAchievements tap data
+
 jt1942_main u_main(
+    .ra_addr    ( ra_game_addr  ),
+    .ra_we      ( ra_game_we    ),
     .rst        ( rst           ),
     .clk        ( clk           ),
     .cen6       ( cen6          ),

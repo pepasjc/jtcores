@@ -7,6 +7,11 @@ audio:
     - { name: psg1, module: jt03_psg, rsum: 68k }
     - { name: fm0,  module: jt03_fm,  rsum: 47k, rc: [{ r: 1rout,  c: 1n }]}
     - { name: fm1,  module: jt03_fm,  rsum: 47k, rc: [{ r: 1rout,  c: 1n }]}
+# RetroAchievements tap driven by the main CPU module
+ports:
+  - { name: ra_game_addr, msb: 15 }
+  - { name: ra_game_din,  msb: 15 }
+  - { name: ra_game_we,   msb: 1 }
 sdram:
   banks:
     - buses:

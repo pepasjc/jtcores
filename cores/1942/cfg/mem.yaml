@@ -15,6 +15,9 @@ clocks:
         - cen3
         - cen1p5
 ports:
+  - { name: ra_game_addr, msb: 15 }
+  - { name: ra_game_din,  msb: 15 }
+  - { name: ra_game_we,   msb: 1 }
   - { name: not_higemaru }
 sdram:
   banks:

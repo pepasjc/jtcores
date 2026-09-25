@@ -62,7 +62,10 @@ module jt1942_main(
     // PROM F1
     input    [7:0]     prog_addr,
     input              prom_irq_we,
-    input    [3:0]     prog_din
+    input    [3:0]     prog_din,
+    // RetroAchievements tap (see mem.yaml ports)
+    output   [15:0]    ra_addr,
+    output   [ 1:0]    ra_we
 );
 
 `ifndef NOMAIN
@@ -349,4 +352,8 @@ jtframe_z80 u_cpu(
         coin_cnt = 0;
     end
 `endif
+// RetroAchievements tap: Z80 work RAM E000-EFFF = FBNeo All Ram 0
+assign ra_addr = {4'd0, A[11:0]};
+assign ra_we   = {2{cpu_ram_we}} & (ra_addr[0] ? 2'b10 : 2'b01);
+
 endmodule

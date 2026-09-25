@@ -24,3 +24,9 @@ JOIN_JOYSTICKS
 [mister]
 JTFRAME_ARX=5
 JTFRAME_ARY=4
+
+[mister]
+# RetroAchievements: work RAM tapped in the main CPU module (mem.yaml ports)
+JTFRAME_RA_MIRROR
+JTFRAME_RA_TAP
+JTFRAME_RA_AW=13

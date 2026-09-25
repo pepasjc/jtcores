@@ -37,3 +37,9 @@ JTFRAME_SKIP
 
 [mister]
 JTFRAME_NOHQ2X
+
+[mister]
+# RetroAchievements: 68K work RAM (0xFF8000) sits at SDRAM bank-0 word 0x44000;
+# the 64 kB window from 0x40000 puts it at mirror 0x8000
+JTFRAME_RA_MIRROR
+JTFRAME_RA_WRAM=23'h040000
