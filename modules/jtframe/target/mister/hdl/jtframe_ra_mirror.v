@@ -2,9 +2,11 @@
  *
  * RetroAchievements RAM mirror for JTFRAME MiSTer cores.
  *
- * Keeps a shadow copy of a 64 kB work RAM held in SDRAM bank 0 by snooping
- * the bank-0 write bus, and copies it to DDR3 every VBlank so the ARM side
- * (odelot's RetroAchievements fork of Main_MiSTer) can evaluate achievements.
+ * Keeps a shadow copy of a 64 kB work RAM window, fed by a generic write port,
+ * and copies it to DDR3 every VBlank so the ARM side (odelot's
+ * RetroAchievements fork of Main_MiSTer) can evaluate achievements.
+ * jtframe_mister.sv feeds the write port either by snooping SDRAM bank-0
+ * writes (JTFRAME_RA_WRAM window) or from a game BRAM tap (JTFRAME_RA_TAP).
  *
  * DDR layout at byte address 0x3D000000 (the "RACH" Full Mirror header used
  * by the RA fork, see Main_MiSTer ra_ramread.h):
@@ -26,8 +28,6 @@
  */
 
 module jtframe_ra_mirror #(parameter
-    SDRAMW    = 23,
-    WRAM_BASE = 23'h30_0000,   // SDRAM word address of the RAM in bank 0
     DDR_BASE  = 29'h07A0_0000, // 0x3D000000 / 8
     VERSION   = 16'h0100
 )(
@@ -35,11 +35,11 @@ module jtframe_ra_mirror #(parameter
     input               clk,        // clk_rom: SDRAM and DDR client clock
     input               lvbl,
     input               hold,       // ROM download in progress
-    // SDRAM bank 0 write snoop
-    input  [SDRAMW-1:0] ba0_addr,
-    input               ba0_wr,
-    input        [15:0] ba0_din,
-    input        [ 1:0] ba0_dsn,
+    // Shadow write port: 16-bit word in the 64 kB window and byte enables
+    // (wr_be[1] = bits 15:8, the even CPU byte of a 68000 word)
+    input        [14:0] wr_word,
+    input        [15:0] wr_din,
+    input        [ 1:0] wr_be,
     // DDR client
     output reg          active,     // owns the DDR client port
     input               ddr_busy,
@@ -58,9 +58,8 @@ localparam [2:0] IDLE=0, HDR_BUSY=1, PRE=2, DATA=3, FRAME=4, HDR_DONE=5, ZERO=6;
 
 // ---------------------------------------------------------------------------
 // Shadow RAM: eight byte lanes of 8k x 8, so a whole DDR qword reads at once
-wire        hit  = ba0_wr && ba0_addr[SDRAMW-1:15] == WRAM_BASE[SDRAMW-1:15];
-wire [12:0] wr_q = ba0_addr[14:2];
-wire [ 1:0] lane = ba0_addr[1:0];
+wire [12:0] wr_q = wr_word[14:2];
+wire [ 1:0] lane = wr_word[1:0];
 
 reg  [ 2:0] st;
 reg  [12:0] ptr;
@@ -72,10 +71,10 @@ genvar b;
 generate
     for( b=0; b<8; b=b+1 ) begin : lanes
         // byte 2L = word[7:0] (low byte, odd CPU address), 2L+1 = word[15:8]
-        wire we = hit && lane == b/2 && !ba0_dsn[b%2];
+        wire we = lane == b/2 && wr_be[b%2];
         jtframe_dual_ram #(.DW(8),.AW(13)) u_lane(
             .clk0   ( clk       ),
-            .data0  ( b%2 ? ba0_din[15:8] : ba0_din[7:0] ),
+            .data0  ( b%2 ? wr_din[15:8] : wr_din[7:0] ),
             .addr0  ( wr_q      ),
             .we0    ( we        ),
             .q0     (           ),

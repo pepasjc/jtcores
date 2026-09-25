@@ -53,3 +53,8 @@ NOTMNT2
 [pocket]
 # Needed for glfgreat
 JTFRAME_SRAM
+
+[mister]
+# RetroAchievements: mirror the 68K work RAM BRAM (mem.yaml ra_tap) to DDR3 every VBlank
+JTFRAME_RA_MIRROR
+JTFRAME_RA_TAP

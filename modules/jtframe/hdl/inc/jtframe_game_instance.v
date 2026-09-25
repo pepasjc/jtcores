@@ -116,6 +116,11 @@ u_game(
     .ln_we        ( ln_we            ),
     .fb_keep      ( fb_keep          ), `endif
 
+`ifdef JTFRAME_RA_TAP
+    .ra_tap_addr  ( ra_tap_addr      ),
+    .ra_tap_din   ( ra_tap_din       ),
+    .ra_tap_we    ( ra_tap_we        ), `endif
+
 `ifdef JTFRAME_LF_ZOOM
     .h_step       ( game_h_step      ),
     .v_step       ( game_v_step      ), `endif

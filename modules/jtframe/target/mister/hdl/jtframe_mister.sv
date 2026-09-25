@@ -150,6 +150,10 @@ module jtframe_mister #(parameter
     output        [3:0] ba_ack,   ba_rdy,   ba_dst,   ba_dok,
     input        [15:0] ba0_din,  ba1_din,  ba2_din,  ba3_din,
     input        [ 1:0] ba0_dsn,  ba1_dsn,  ba2_dsn,  ba3_dsn,
+    // RetroAchievements RAM tap from the game (JTFRAME_RA_TAP)
+    input        [15:0] ra_tap_addr,
+    input        [15:0] ra_tap_din,
+    input        [ 1:0] ra_tap_we,
 `ifdef JTFRAME_SDRAM_CACHE
     input        [15:0] burst_din,
 `endif
@@ -1078,21 +1082,32 @@ wire        mux_rd, mux_we, mux_busy;
     wire [28:0] ra_addr;
     wire [63:0] ra_din;
     wire        ra_we, ra_active;
+    wire [14:0] ra_wr_word;
+    wire [15:0] ra_wr_din;
+    wire [ 1:0] ra_wr_be;
 
-    jtframe_ra_mirror #(
-        .SDRAMW     ( SDRAMW            )
-    `ifdef JTFRAME_RA_WRAM
-       ,.WRAM_BASE  ( `JTFRAME_RA_WRAM  )
-    `endif
-    ) u_ra_mirror(
+`ifdef JTFRAME_RA_TAP
+    // RAM that is not in SDRAM: the game exports a BRAM write port (mem.yaml ra_tap)
+    assign ra_wr_word = ra_tap_addr[15:1];
+    assign ra_wr_din  = ra_tap_din;
+    assign ra_wr_be   = ra_tap_we;
+`else
+    // RAM in SDRAM bank 0: snoop the bank-0 writes inside the 64 kB window
+    localparam [SDRAMW-1:0] RA_WRAM = `ifdef JTFRAME_RA_WRAM `JTFRAME_RA_WRAM `else 23'h30_0000 `endif;
+    wire ra_hit = ba_wr[0] && ba0_addr[SDRAMW-1:15] == RA_WRAM[SDRAMW-1:15];
+    assign ra_wr_word = ba0_addr[14:0];
+    assign ra_wr_din  = ba0_din;
+    assign ra_wr_be   = {2{ra_hit}} & ~ba0_dsn;
+`endif
+
+    jtframe_ra_mirror u_ra_mirror(
         .rst        ( rst               ),
         .clk        ( clk_rom           ),
         .lvbl       ( LVBL              ),
         .hold       ( ioctl_rom         ),
-        .ba0_addr   ( ba0_addr          ),
-        .ba0_wr     ( ba_wr[0]          ),
-        .ba0_din    ( ba0_din           ),
-        .ba0_dsn    ( ba0_dsn           ),
+        .wr_word    ( ra_wr_word        ),
+        .wr_din     ( ra_wr_din         ),
+        .wr_be      ( ra_wr_be          ),
         .active     ( ra_active         ),
         .ddr_busy   ( mux_busy          ),
         .ddr_burstcnt( ra_burstcnt      ),

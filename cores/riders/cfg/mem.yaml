@@ -86,6 +86,7 @@ bram:
     addr: main_addr[13:1]
     din: ram_din
     dout: ram_data
+    ra_tap: true    # RetroAchievements: FBNeo's All Ram starts with this RAM
   # RAM holding the MSB bits of the object tile ROM address
   - name: omsb
     addr_width: 9

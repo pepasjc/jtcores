@@ -631,6 +631,18 @@ jtframe_ram{{ if eq $bus.Data_width 16 }}16{{else if eq $bus.Data_width 32}}32{{
 );{{ end }}
 {{ end }}{{end}}
 
+`ifdef JTFRAME_RA_TAP
+// RetroAchievements RAM tap: the write port of the BRAM marked ra_tap in mem.yaml,
+// as byte address / 16-bit data / byte enables for jtframe_ra_mirror
+{{- range $cnt, $bus:=.BRAM }}{{ if $bus.Ra_tap }}{{ if eq $bus.Data_width 16 }}
+assign ra_tap_addr = { {{$bus.Addr}}, 1'b0 };
+assign ra_tap_din  = {{$bus.Din}};
+assign ra_tap_we   = {{$bus.We}};{{ else }}
+assign ra_tap_addr = {{$bus.Addr}};
+assign ra_tap_din  = { 2{ {{$bus.Din}} } };
+assign ra_tap_we   = { 2{ |{{$bus.We}} } } & (ra_tap_addr[0] ? 2'b10 : 2'b01);{{ end }}{{ end }}{{ end }}
+`endif
+
 {{- if .Ioctl.Dump }}
 {{ template "ioctl_dump.v" .Ioctl }}
 {{ end }}

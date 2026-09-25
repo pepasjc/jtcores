@@ -74,6 +74,12 @@
     input    [15:0] ln_pxl,
     input    [`JTFRAME_LF_VW-1:0] ln_v,
 `endif
+`ifdef JTFRAME_RA_TAP
+    // RetroAchievements RAM tap (see game_sdram.v / jtframe_ra_mirror.v)
+    output   [15:0] ra_tap_addr,
+    output   [15:0] ra_tap_din,
+    output   [ 1:0] ra_tap_we,
+`endif
 `ifdef JTFRAME_LF_ZOOM
     output   [ 8:0] h_step,
     output   [ 8:0] v_step,

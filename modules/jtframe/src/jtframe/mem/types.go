@@ -54,6 +54,7 @@ type BRAMBus struct {
 	Dout       string        `yaml:"dout"` // optional name for dout signal
 	Simfile    BRAMSimfile   `yaml:"simfile"`
 	Prom       bool          `yaml:"prom"` // program contents after JTFRAME_PROM_START
+	Ra_tap     bool          `yaml:"ra_tap"` // export the write port as the RetroAchievements RAM tap (JTFRAME_RA_TAP)
 	Ioctl      BRAMBus_Ioctl `yaml:"ioctl"`
 	Dual_port  struct {
 		Name string `yaml:"name"`
@@ -426,6 +427,7 @@ func (bus *BRAMBus) UnmarshalYAML(unmarshal func(interface{}) error) (err error)
 		Dout       string        `yaml:"dout"`
 		Simfile    BRAMSimfile   `yaml:"simfile"`
 		Prom       bool          `yaml:"prom"`
+		Ra_tap     bool          `yaml:"ra_tap"`
 		Ioctl      BRAMBus_Ioctl `yaml:"ioctl"`
 		Dual_port  struct {
 			Name     string `yaml:"name"`
@@ -444,7 +446,7 @@ func (bus *BRAMBus) UnmarshalYAML(unmarshal func(interface{}) error) (err error)
 	err = common.Validator{
 		Context: "BRAM bus",
 		Valid: []string{"when", "unless", "name", "size", "addr_width", "data_width", "rw", "we", "latch",
-			"addr", "din", "dout", "simfile", "prom", "ioctl", "dual_port", "rom"},
+			"addr", "din", "dout", "simfile", "prom", "ra_tap", "ioctl", "dual_port", "rom"},
 	}.Validate(unmarshal)
 	if err != nil {
 		return err
@@ -467,6 +469,7 @@ func (bus *BRAMBus) UnmarshalYAML(unmarshal func(interface{}) error) (err error)
 	bus.Dout = aux.Dout
 	bus.Simfile = aux.Simfile
 	bus.Prom = aux.Prom
+	bus.Ra_tap = aux.Ra_tap
 	bus.Ioctl = aux.Ioctl
 	bus.Dual_port = aux.Dual_port
 	bus.ROM = aux.ROM

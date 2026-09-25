@@ -439,6 +439,8 @@ assign AUDIO_S = `JTFRAME_SIGNED_SND;
 wire [`JTFRAME_LF_HW-1:0] game_hdump,   ln_addr;
 wire [`JTFRAME_LF_VW-1:0] game_vrender, ln_v;
 wire        ln_done, ln_hs, ln_vs, ln_lvbl, ln_we, fb_keep;
+wire [15:0] ra_tap_addr, ra_tap_din;
+wire [ 1:0] ra_tap_we;
 wire [15:0] ln_dout, ln_pxl, ln_data;
 
 jtframe_mister #(
@@ -572,6 +574,9 @@ u_frame(
     .ba_ack     ( ba_ack        ),
     .ba0_din    ( ba0_din       ),
     .ba0_dsn    ( ba0_dsn       ),
+    .ra_tap_addr( ra_tap_addr   ),
+    .ra_tap_din ( ra_tap_din    ),
+    .ra_tap_we  ( ra_tap_we     ),
     .ba1_din    ( ba1_din       ),
     .ba1_dsn    ( ba1_dsn       ),
     .ba2_din    ( ba2_din       ),
