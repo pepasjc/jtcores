@@ -28,6 +28,7 @@
  */
 
 module jtframe_ra_mirror #(parameter
+    AW        = 16,            // shadow size as a byte address width: 16 = 64 kB
     DDR_BASE  = 29'h07A0_0000, // 0x3D000000 / 8
     VERSION   = 16'h0100
 )(
@@ -52,27 +53,30 @@ module jtframe_ra_mirror #(parameter
 
 localparam [31:0] MAGIC  = 32'h5241_4348;
 localparam  [7:0] BURST  = 8'd32;     // 256 B: aligned, never crosses 4 kB
-localparam        QWORDS = 8192;     // 64 kB
+localparam        QW     = AW-3;     // qword address width
+localparam        QWORDS = 1<<QW;
 
 localparam [2:0] IDLE=0, HDR_BUSY=1, PRE=2, DATA=3, FRAME=4, HDR_DONE=5, ZERO=6;
 
 // ---------------------------------------------------------------------------
 // Shadow RAM: eight byte lanes of 8k x 8, so a whole DDR qword reads at once
-wire [12:0] wr_q = wr_word[14:2];
+wire [QW-1:0] wr_q = wr_word[QW+1:2];
 wire [ 1:0] lane = wr_word[1:0];
+// writes past a reduced shadow are dropped, not wrapped around
+wire        in_win = AW == 16 || (wr_word >> (AW-1)) == 0;
 
 reg  [ 2:0] st;
-reg  [12:0] ptr;
+reg  [QW-1:0] ptr;
 wire        accept = ddr_we && !ddr_busy && st == DATA;
-wire [12:0] rd_q   = accept ? ptr + 13'd1 : ptr;
+wire [QW-1:0] rd_q = accept ? ptr + 1'd1 : ptr;
 wire [63:0] q;
 
 genvar b;
 generate
     for( b=0; b<8; b=b+1 ) begin : lanes
         // byte 2L = word[7:0] (low byte, odd CPU address), 2L+1 = word[15:8]
-        wire we = lane == b/2 && wr_be[b%2];
-        jtframe_dual_ram #(.DW(8),.AW(13)) u_lane(
+        wire we = in_win && lane == b/2 && wr_be[b%2];
+        jtframe_dual_ram #(.DW(8),.AW(QW)) u_lane(
             .clk0   ( clk       ),
             .data0  ( b%2 ? wr_din[15:8] : wr_din[7:0] ),
             .addr0  ( wr_q      ),
@@ -146,11 +150,11 @@ always @(posedge clk, posedge rst) begin
                 st           <= DATA;
             end
             DATA: if( accept ) begin
-                ptr  <= ptr + 13'd1;
+                ptr  <= ptr + 1'd1;
                 beat <= beat + 5'd1;
                 if( &beat ) begin
                     ddr_addr <= ddr_addr + { 21'd0, BURST };
-                    if( ptr == QWORDS-1 ) begin
+                    if( &ptr ) begin
                         ddr_addr     <= DDR_BASE + 29'h1;
                         ddr_burstcnt <= 8'd1;
                         frame        <= frame + 32'd1;

@@ -331,6 +331,7 @@ func Test_fill_implicit_ports_expands_32bit_bram_write_enable(t *testing.T) {
 					Rw       bool   `yaml:"rw"`
 					We       string `yaml:"we"`
 					Latch    string `yaml:"latch"`
+					Ra_tap   bool   `yaml:"ra_tap"`
 					AddrFull string
 				}{
 					Name: "video",

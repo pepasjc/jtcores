@@ -55,6 +55,7 @@ type BRAMBus struct {
 	Simfile    BRAMSimfile   `yaml:"simfile"`
 	Prom       bool          `yaml:"prom"` // program contents after JTFRAME_PROM_START
 	Ra_tap     bool          `yaml:"ra_tap"` // export the write port as the RetroAchievements RAM tap (JTFRAME_RA_TAP)
+	Ra_tap_offset string     `yaml:"ra_tap_offset"` // byte offset of this RAM in the RA mirror (Verilog expression)
 	Ioctl      BRAMBus_Ioctl `yaml:"ioctl"`
 	Dual_port  struct {
 		Name string `yaml:"name"`
@@ -64,6 +65,7 @@ type BRAMBus struct {
 		Rw   bool   `yaml:"rw"`
 		We   string `yaml:"we"`
 		Latch string `yaml:"latch"`
+		Ra_tap bool `yaml:"ra_tap"` // also tap writes coming through this port
 		// filled later
 		AddrFull string // contains the bus indexes
 	} `yaml:"dual_port"`
@@ -428,6 +430,7 @@ func (bus *BRAMBus) UnmarshalYAML(unmarshal func(interface{}) error) (err error)
 		Simfile    BRAMSimfile   `yaml:"simfile"`
 		Prom       bool          `yaml:"prom"`
 		Ra_tap     bool          `yaml:"ra_tap"`
+		Ra_tap_offset string     `yaml:"ra_tap_offset"`
 		Ioctl      BRAMBus_Ioctl `yaml:"ioctl"`
 		Dual_port  struct {
 			Name     string `yaml:"name"`
@@ -437,6 +440,7 @@ func (bus *BRAMBus) UnmarshalYAML(unmarshal func(interface{}) error) (err error)
 			Rw       bool   `yaml:"rw"`
 			We       string `yaml:"we"`
 			Latch    string `yaml:"latch"`
+			Ra_tap   bool   `yaml:"ra_tap"`
 			AddrFull string
 		} `yaml:"dual_port"`
 		ROM struct {
@@ -446,7 +450,7 @@ func (bus *BRAMBus) UnmarshalYAML(unmarshal func(interface{}) error) (err error)
 	err = common.Validator{
 		Context: "BRAM bus",
 		Valid: []string{"when", "unless", "name", "size", "addr_width", "data_width", "rw", "we", "latch",
-			"addr", "din", "dout", "simfile", "prom", "ra_tap", "ioctl", "dual_port", "rom"},
+			"addr", "din", "dout", "simfile", "prom", "ra_tap", "ra_tap_offset", "ioctl", "dual_port", "rom"},
 	}.Validate(unmarshal)
 	if err != nil {
 		return err
@@ -470,6 +474,7 @@ func (bus *BRAMBus) UnmarshalYAML(unmarshal func(interface{}) error) (err error)
 	bus.Simfile = aux.Simfile
 	bus.Prom = aux.Prom
 	bus.Ra_tap = aux.Ra_tap
+	bus.Ra_tap_offset = aux.Ra_tap_offset
 	bus.Ioctl = aux.Ioctl
 	bus.Dual_port = aux.Dual_port
 	bus.ROM = aux.ROM

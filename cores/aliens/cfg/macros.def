@@ -37,3 +37,8 @@ JTFRAME_OSD_NOCREDITS
 [mister]
 JTFRAME_ARX=5
 JTFRAME_ARY=4
+
+[mister]
+# RetroAchievements: mirror the work RAM BRAM (mem.yaml ra_tap) to DDR3 every VBlank
+JTFRAME_RA_MIRROR
+JTFRAME_RA_TAP

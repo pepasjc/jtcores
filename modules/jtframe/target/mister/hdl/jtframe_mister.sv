@@ -1100,7 +1100,11 @@ wire        mux_rd, mux_we, mux_busy;
     assign ra_wr_be   = {2{ra_hit}} & ~ba0_dsn;
 `endif
 
-    jtframe_ra_mirror u_ra_mirror(
+    jtframe_ra_mirror #(
+    `ifdef JTFRAME_RA_AW
+        .AW( `JTFRAME_RA_AW )  // smaller shadow for cores short of BRAM
+    `endif
+    ) u_ra_mirror(
         .rst        ( rst               ),
         .clk        ( clk_rom           ),
         .lvbl       ( LVBL              ),

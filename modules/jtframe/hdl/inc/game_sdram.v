@@ -632,15 +632,25 @@ jtframe_ram{{ if eq $bus.Data_width 16 }}16{{else if eq $bus.Data_width 32}}32{{
 {{ end }}{{end}}
 
 `ifdef JTFRAME_RA_TAP
-// RetroAchievements RAM tap: the write port of the BRAM marked ra_tap in mem.yaml,
-// as byte address / 16-bit data / byte enables for jtframe_ra_mirror
-{{- range $cnt, $bus:=.BRAM }}{{ if $bus.Ra_tap }}{{ if eq $bus.Data_width 16 }}
-assign ra_tap_addr = { {{$bus.Addr}}, 1'b0 };
-assign ra_tap_din  = {{$bus.Din}};
-assign ra_tap_we   = {{$bus.We}};{{ else }}
-assign ra_tap_addr = {{$bus.Addr}};
-assign ra_tap_din  = { 2{ {{$bus.Din}} } };
-assign ra_tap_we   = { 2{ |{{$bus.We}} } } & (ra_tap_addr[0] ? 2'b10 : 2'b01);{{ end }}{{ end }}{{ end }}
+// RetroAchievements RAM tap: write ports of the BRAMs marked ra_tap in mem.yaml
+// (dual_port.ra_tap taps the second port too), as mirror byte address / 16-bit
+// data / byte enables for jtframe_ra_mirror. ra_tap_offset places each RAM in
+// the mirror. When two taps write in the same clock cycle the first one listed
+// wins; CPU write strobes span several cycles, so the other lands next cycle.
+{{- range $cnt, $bus:=.BRAM }}{{ if $bus.Ra_tap }}
+wire [15:0] ra_tap_{{$bus.Name}}_addr = {{ if eq $bus.Data_width 16 }}{ {{$bus.Addr}}, 1'b0 }{{else}}{{$bus.Addr}}{{end}}{{ if $bus.Ra_tap_offset }} + {{$bus.Ra_tap_offset}}{{end}};
+wire [15:0] ra_tap_{{$bus.Name}}_din  = {{ if eq $bus.Data_width 16 }}{{$bus.Din}}{{else}}{ 2{ {{$bus.Din}} } }{{end}};
+wire [ 1:0] ra_tap_{{$bus.Name}}_we   = {{ if eq $bus.Data_width 16 }}{{$bus.We}}{{else}}{ 2{ |{{$bus.We}} } } & (ra_tap_{{$bus.Name}}_addr[0] ? 2'b10 : 2'b01){{end}};
+{{- end }}{{ if and $bus.Dual_port.Name $bus.Dual_port.Ra_tap }}
+wire [15:0] ra_tap_{{$bus.Dual_port.Name}}_addr = {{ if eq $bus.Data_width 16 }}{ {{$bus.Dual_port.AddrFull}}, 1'b0 }{{else}}{{$bus.Dual_port.AddrFull}}{{end}}{{ if $bus.Ra_tap_offset }} + {{$bus.Ra_tap_offset}}{{end}};
+wire [15:0] ra_tap_{{$bus.Dual_port.Name}}_din  = {{ if eq $bus.Data_width 16 }}{{$bus.Dual_port.Din}}{{else}}{ 2{ {{$bus.Dual_port.Din}} } }{{end}};
+wire [ 1:0] ra_tap_{{$bus.Dual_port.Name}}_we   = {{ if eq $bus.Data_width 16 }}{{if $bus.Dual_port.We}}{{$bus.Dual_port.We}}{{else}}{{$bus.Dual_port.Name}}_we{{end}}{{else}}{ 2{ |{{if $bus.Dual_port.We}}{{$bus.Dual_port.We}}{{else}}{{$bus.Dual_port.Name}}_we{{end}} } } & (ra_tap_{{$bus.Dual_port.Name}}_addr[0] ? 2'b10 : 2'b01){{end}};
+{{- end }}{{ end }}
+assign { ra_tap_addr, ra_tap_din, ra_tap_we } =
+{{- range $cnt, $bus:=.BRAM }}{{ if $bus.Ra_tap }}
+    |ra_tap_{{$bus.Name}}_we ? { ra_tap_{{$bus.Name}}_addr, ra_tap_{{$bus.Name}}_din, ra_tap_{{$bus.Name}}_we } :{{ end }}{{ if and $bus.Dual_port.Name $bus.Dual_port.Ra_tap }}
+    |ra_tap_{{$bus.Dual_port.Name}}_we ? { ra_tap_{{$bus.Dual_port.Name}}_addr, ra_tap_{{$bus.Dual_port.Name}}_din, ra_tap_{{$bus.Dual_port.Name}}_we } :{{ end }}{{ end }}
+    34'd0;
 `endif
 
 {{- if .Ioctl.Dump }}
