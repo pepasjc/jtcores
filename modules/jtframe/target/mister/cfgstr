@@ -1,5 +1,5 @@
 {{- /* https://github.com/MiSTer-devel/Wiki_MiSTer/wiki/Core-configuration-string */ -}}
-{{.CORENAME}};;
+{{ if .JTFRAME_RA_MIRROR }}RA_{{ end }}{{.CORENAME}};;
 {{ if .JTFRAME_OSD_LOAD }}          F,rom;                    {{ end }}
 {{ if .JTFRAME_CART_OFFSET }}       FS4,ngpngc;               {{ end }}
 {{ if .JTFRAME_PLL_TUNE }}          ODF,System clock,100%,101%,102%,104.16%,105%,99%,97%,95%; {{ end }}
