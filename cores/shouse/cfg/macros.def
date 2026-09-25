@@ -37,3 +37,8 @@ debug JTFRAME_IOCTL_RD+=61504
 [mist|sidi]
 # not enough BRAM
 JTFRAME_SKIP
+
+[mister]
+# RetroAchievements: mirror FBNeo's All Ram from RA 0x8000 (mem.yaml ra_tap) to DDR3
+JTFRAME_RA_MIRROR
+JTFRAME_RA_TAP

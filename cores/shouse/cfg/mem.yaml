@@ -57,6 +57,9 @@ bram:
     data_width: 8
     # offset: RAM_OFFSET
     rw: true
+    # RetroAchievements mirror = FBNeo All Ram from RA 0x8000 (object RAM first)
+    ra_tap: true
+    ra_tap_offset: "16'h1000"   # work RAM, RA 0x9000
   # Tile map
   - name: tmap
     addr_width: 15
@@ -72,6 +75,8 @@ bram:
     addr_width: 13
     data_width:  8
     rw: true
+    ra_tap: true
+    ra_tap_offset: "16'h9800"   # sound CPU RAM, RA 0x11800 (Galaga '88)
   # Object RAM
   - name: oram
     addr_width: 12
@@ -83,6 +88,7 @@ bram:
       din: bdout16
       dout: obus_dout
       rw: true
+      ra_tap: true              # object RAM, RA 0x8000 (low half is work RAM)
   # Palette RAM, 3x8kB
   # colmix muxes rpal,gpal,bpal to pal_dout -> main/sub
   - name: red
@@ -90,12 +96,14 @@ bram:
     data_width: 8
     addr: rgb_addr
     ioctl: { save: true, order: 2 }
+    ra_tap_offset: "16'hB8A0"   # palette R, RA 0x138A0 (Galaga '88)
     dual_port:
       name: rpal
       addr: pal_addr
       din: ram_din
       dout: rpal_dout
       rw: true
+      ra_tap: true
   - name: green
     addr_width: 13
     data_width: 8
