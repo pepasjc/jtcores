@@ -1066,6 +1066,59 @@ wire rot_clk;
 `endif
 `endif
 
+// RetroAchievements RAM mirror: borrows the video DDR client port during
+// VBlank, when neither rotation nor the line-frame buffer writes to DDR
+wire [ 7:0] mux_burstcnt, mux_be;
+wire [28:0] mux_addr;
+wire [63:0] mux_din;
+wire        mux_rd, mux_we, mux_busy;
+
+`ifdef JTFRAME_RA_MIRROR
+    wire [ 7:0] ra_burstcnt, ra_be;
+    wire [28:0] ra_addr;
+    wire [63:0] ra_din;
+    wire        ra_we, ra_active;
+
+    jtframe_ra_mirror #(
+        .SDRAMW     ( SDRAMW            )
+    `ifdef JTFRAME_RA_WRAM
+       ,.WRAM_BASE  ( `JTFRAME_RA_WRAM  )
+    `endif
+    ) u_ra_mirror(
+        .rst        ( rst               ),
+        .clk        ( clk_rom           ),
+        .lvbl       ( LVBL              ),
+        .hold       ( ioctl_rom         ),
+        .ba0_addr   ( ba0_addr          ),
+        .ba0_wr     ( ba_wr[0]          ),
+        .ba0_din    ( ba0_din           ),
+        .ba0_dsn    ( ba0_dsn           ),
+        .active     ( ra_active         ),
+        .ddr_busy   ( mux_busy          ),
+        .ddr_burstcnt( ra_burstcnt      ),
+        .ddr_addr   ( ra_addr           ),
+        .ddr_we     ( ra_we             ),
+        .ddr_be     ( ra_be             ),
+        .ddr_din    ( ra_din            )
+    );
+
+    assign mux_burstcnt = ra_active ? ra_burstcnt : rot_burstcnt;
+    assign mux_addr     = ra_active ? ra_addr     : rot_addr;
+    assign mux_rd       = ra_active ? 1'b0        : rot_rd;
+    assign mux_we       = ra_active ? ra_we       : rot_we;
+    assign mux_be       = ra_active ? ra_be       : rot_be;
+    assign mux_din      = ra_active ? ra_din      : rot_din;
+    assign rot_busy     = mux_busy | ra_active;
+`else
+    assign mux_burstcnt = rot_burstcnt;
+    assign mux_addr     = rot_addr;
+    assign mux_rd       = rot_rd;
+    assign mux_we       = rot_we;
+    assign mux_be       = rot_be;
+    assign mux_din      = rot_din;
+    assign rot_busy     = mux_busy;
+`endif
+
 jtframe_mr_ddrmux u_ddrmux(
         .rst            ( rst             ),
         .clk            ( clk_rom         ),
@@ -1077,13 +1130,13 @@ jtframe_mr_ddrmux u_ddrmux(
         .ddrld_busy     ( ddrld_busy      ),
         // Video DDR client
         .rot_clk        ( rot_clk         ),
-        .rot_burstcnt   ( rot_burstcnt    ),
-        .rot_addr       ( rot_addr        ),
-        .rot_rd         ( rot_rd          ),
-        .rot_we         ( rot_we          ),
-        .rot_be         ( rot_be          ),
-        .rot_din        ( rot_din         ),
-        .rot_busy       ( rot_busy        ),
+        .rot_burstcnt   ( mux_burstcnt    ),
+        .rot_addr       ( mux_addr        ),
+        .rot_rd         ( mux_rd          ),
+        .rot_we         ( mux_we          ),
+        .rot_be         ( mux_be          ),
+        .rot_din        ( mux_din         ),
+        .rot_busy       ( mux_busy        ),
         // DDR Signals
         .ddr_clk        ( DDRAM_CLK       ),
         .ddr_busy       ( DDRAM_BUSY      ),

@@ -49,13 +49,20 @@ module jtframe_mr_ddrmux(
     localparam LFBUF=0;
 `endif
 
+// the RetroAchievements mirror writes through the video client port
+`ifdef JTFRAME_RA_MIRROR
+    localparam RAMIRROR=1;
+`else
+    localparam RAMIRROR=0;
+`endif
+
 reg ddrld_en;
 
 always @(posedge clk, posedge rst) begin
     if( rst ) begin
         ddrld_en <= 0;
     end else if(!ddr_busy) begin
-        case( {DDRLOAD[0], VERTICAL[0] || LFBUF[0]} )
+        case( {DDRLOAD[0], VERTICAL[0] || LFBUF[0] || RAMIRROR[0]} )
             2'b00: ddrld_en <= 0; // don't care
             2'b10: ddrld_en <= 1;
             2'b01: ddrld_en <= 0;

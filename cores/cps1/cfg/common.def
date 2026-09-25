@@ -48,6 +48,8 @@ JTFRAME_ARX=1280
 JTFRAME_ARY=973
 #JTFRAME_CHEAT
 JTFRAME_180SHIFT
+# RetroAchievements: mirror the 68K work RAM to DDR3 every VBlank
+JTFRAME_RA_MIRROR
 # OSD options
 
 [pocket]
