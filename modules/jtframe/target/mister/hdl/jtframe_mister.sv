@@ -1100,10 +1100,9 @@ wire        mux_rd, mux_we, mux_busy;
     assign ra_wr_be   = {2{ra_hit}} & ~ba0_dsn;
 `endif
 
+    // JTFRAME_RA_AW: smaller shadow for cores short of BRAM (16 = 64 kB)
     jtframe_ra_mirror #(
-    `ifdef JTFRAME_RA_AW
-        .AW( `JTFRAME_RA_AW )  // smaller shadow for cores short of BRAM
-    `endif
+        .AW( `ifdef JTFRAME_RA_AW `JTFRAME_RA_AW `else 16 `endif )
     ) u_ra_mirror(
         .rst        ( rst               ),
         .clk        ( clk_rom           ),

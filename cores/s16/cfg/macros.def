@@ -80,3 +80,9 @@ JTFRAME_NOHQ2X
 # the core does not fit in these devices
 JTFRAME_SKIP
 
+
+[mister]
+# RetroAchievements: mirror the 16 kB work RAM (mem.yaml dual_port ra_tap) to DDR3
+JTFRAME_RA_MIRROR
+JTFRAME_RA_TAP
+JTFRAME_RA_AW=14

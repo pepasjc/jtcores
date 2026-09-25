@@ -72,3 +72,4 @@ bram:
       addr: main_addr[13:1]
       din: xram_din
       dout: wram_dout
+      ra_tap: true   # RetroAchievements: the 68K work RAM, first in FBNeo's All Ram
