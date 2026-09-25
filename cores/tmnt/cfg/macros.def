@@ -38,3 +38,8 @@ debug JTFRAME_IOCTL_RD+=28705
 # OSD credits cannot be used when
 # DIP base is less than 13
 JTFRAME_OSD_NOCREDITS
+
+[mister]
+# RetroAchievements: mirror the 68K work RAM (SDRAM bank 0 window) to DDR3 every VBlank
+JTFRAME_RA_MIRROR
+JTFRAME_RA_WRAM=23'h100000

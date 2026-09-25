@@ -46,3 +46,8 @@ MCU_OFFSET         =0x040000
 
 [mister]
 # OSD_VOL cannot be used on MiST because of JTFRAME_DIAL
+
+[mister]
+# RetroAchievements: mirror the 68K work RAM (SDRAM bank 0 window) to DDR3 every VBlank
+JTFRAME_RA_MIRROR
+JTFRAME_RA_WRAM=23'h000000
