@@ -24,6 +24,11 @@ audio:
     # there is a 2nd order filter on the board but the component values
     # are not right in the schematics (so far). Using the FIR filter for now
     - { name: pcm, dcrm: true,       rsum: 1, data_width: 10, fir: fir_192k_4k.csv }
+# RetroAchievements tap driven by jtkiwi_game (object RAM, shared RAM)
+ports:
+  - { name: ra_game_addr, msb: 15 }
+  - { name: ra_game_din,  msb: 15 }
+  - { name: ra_game_we,   msb: 1 }
 sdram:
   # post_addr: true
   banks:

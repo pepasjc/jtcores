@@ -14,6 +14,10 @@ audio:
     - { name: cus30, module: jtcus30, rsum: 1k }
 ports:
   - { name: cpu_dout, msb:  7, lsb: 0 }
+  # RetroAchievements tap driven by jtpaclan_game (main CPU RAM, MCU RAM)
+  - { name: ra_game_addr, msb: 15 }
+  - { name: ra_game_din,  msb: 15 }
+  - { name: ra_game_we,   msb: 1 }
 sdram:
   banks:
     - buses:

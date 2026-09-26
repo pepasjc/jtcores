@@ -30,6 +30,10 @@ module jtthundr_sound(
     input        [ 7:0] ram_dout,
     output              ram_we,
     output       [ 7:0] ram_din,
+    // RetroAchievements tap: MCU RAM writes (data is ram_din) placed at their
+    // offset in FBNeo's "All Ram" buffer
+    output       [15:0] ra_addr,
+    output              ra_we,
 
     output reg          rom_cs,
     output       [14:0] rom_addr,
@@ -70,6 +74,18 @@ assign ram_we   = ram_cs & wr;
 assign ram_din  = mcu_dout;
 assign rom_addr = {A[15] & ~hopmappy,A[13:0]};
 assign irq_ack  = A==16'hFFF8;
+
+// RetroAchievements tap. The HD63701 internal RAM (0x80-0xFF) is written
+// inside jtframe_6801mcu, but the address, wr and dout are visible here.
+// FBNeo "All Ram" offsets:
+//   System 86 (d_namcos86): external RAM 0x1400-0x1FFF at 0x6000+A[11:0],
+//                           internal RAM at 0x8000
+//   Baraduke  (d_baraduke): internal RAM at 0x0000, external RAM
+//                           0xC000-0xC7FF at 0x0080
+wire   ra_iram = wr && A[15:7]==9'h001;
+assign ra_we   = ram_we | ra_iram;
+assign ra_addr = metrocrs ? ( ra_iram ? { 9'd0, A[6:0] } : 16'h0080 + { 5'd0, A[10:0] } )
+                          : ( ra_iram ? { 9'h100, A[6:0] } : 16'h6000 + { 4'd0, A[11:0] } );
 
 // Address decoder
 always @(*) begin
@@ -279,7 +295,7 @@ jt51 u_jt51(
     .xright     ( fm_r      )
 );
 `else
-assign c30_dout = 0, embd_addr = 0, ram_addr = 0, ram_we = 0,
+assign c30_dout = 0, embd_addr = 0, ram_addr = 0, ram_we = 0, ra_addr = 0, ra_we = 0,
     ram_din = 0, rom_cs = 0, rom_addr = 0, bus_busy = 0,
     fm_l = 0, fm_r = 0, cus30_l = 0, cus30_r = 0,
     pcm0_addr = 0, pcm1_addr = 0, pcm0_cs=0, pcm1_cs=0, pcm0=0, pcm1=0;

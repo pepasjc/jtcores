@@ -19,3 +19,10 @@ JTFRAME_PROM_START=0x36000
 
 JTFRAME_IOCTL_RD=16384
 JTFRAME_IOCTL_RD+=4
+
+[mister]
+# RetroAchievements: FBNeo's d_pacland All Ram from RA 0x6E000 (VidRAM0/1,
+# SprRAM, MCU RAM, MCU internal RAM) tapped in jtpaclan_game (ports ra_game_*)
+JTFRAME_RA_MIRROR
+JTFRAME_RA_TAP
+JTFRAME_RA_AW=15

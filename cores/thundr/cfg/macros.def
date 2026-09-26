@@ -22,3 +22,9 @@ JTFRAME_PROM_START=0x208000
 
 JTFRAME_IOCTL_RD=24576
 JTFRAME_IOCTL_RD+=22
+
+[mister]
+# RetroAchievements: FBNeo's All Ram (d_namcos86 or d_baraduke layout, from
+# offset 0) tapped in jtthundr_game (mem.yaml ports ra_game_*)
+JTFRAME_RA_MIRROR
+JTFRAME_RA_TAP

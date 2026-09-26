@@ -29,6 +29,10 @@ ports:
   - { name: baddr, msb: 12, lsb: 0 }
   - { name: vtxta, msb: 12, lsb: 1 }
   - { name: metrocrs }
+  # RetroAchievements tap driven by jtthundr_game (CPU bus, object DMA, MCU RAM)
+  - { name: ra_game_addr, msb: 15 }
+  - { name: ra_game_din,  msb: 15 }
+  - { name: ra_game_we,   msb: 1 }
 sdram:
   banks:
     - buses:

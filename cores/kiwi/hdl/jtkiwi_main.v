@@ -31,6 +31,10 @@ module jtkiwi_main(
     input               shr_cs,
     output reg          mshramen,
     output     [ 7:0]   shr_dout,
+    // RetroAchievements tap: shared RAM (0xE000-0xEFFF) write strobes of the
+    // main CPU (cpu_addr/cpu_dout) and of the sub CPU (shr_addr/shr_din)
+    output              ra_mwe,
+    output              ra_swe,
 
     input               dip_pause,
 
@@ -68,6 +72,9 @@ assign ram_we   = mshramen & ~wr_n;
 assign rom_addr = { A[15] ? bank : {2'd0, A[14]}, A[13:0] };
 assign st_dout  = { 3'd0, ~snd_rstn, 1'd0, bank };
 assign mem_acc  = ~mreq_n & rfsh_n;
+// shr_addr[12] is the sub CPU's own RAM at 0xD000, which is not shared
+assign ra_mwe   = ram_we;
+assign ra_swe   = sshramen & ~sub_rnw & ~shr_addr[12];
 
 `ifdef SIMULATION
 wire rombank_cs = rom_cs && A[15:12]>=8;
@@ -232,6 +239,8 @@ jtframe_dual_ram #(.AW(13),.DUMPFILE("mainmem")) u_comm(
         mshramen = 0;
     end
     assign cpu_rnw  = 1;
+    assign ra_mwe   = 0;
+    assign ra_swe   = 0;
     assign cpu_addr = 1;
     assign cpu_dout = 0;
     assign shr_dout = 0;

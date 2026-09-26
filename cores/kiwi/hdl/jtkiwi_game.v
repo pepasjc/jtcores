@@ -42,6 +42,71 @@ assign eff_coin   = {2{coin_xor}}^( coin[1:0] & ({2{~button_aid}}| {&joystick2[3
 assign eff_service= service_xor ^ service;
 assign button_aid = `ifdef MISTER status[13]&aid_en `else 0 `endif ;
 
+// RetroAchievements tap (JTFRAME_RA_TAP, mem.yaml ports ra_game_*).
+// The mirror holds FBNeo's d_tnzs "All Ram" from offset 0 (TAITO_MISC):
+//   ObjCtrl 0x0000, PalRAM 0x0004 (not tapped), SprRAM 0x0404 (main
+//   0xC000-0xDFFF), ShareRAM 0x2404 (main/sub 0xE000-0xEFFF)
+// The X1-001 object RAM (BRAM dma) is 16 bits wide: CPU byte 0xC000+o sits
+// in word o[11:0], lane o[12]. The CPU writes one lane; the X1-001 buffer
+// copy writes both, and they are FBNeo bytes o and o+0x1000, so each lane is
+// its own source.
+wire ra_mwe, ra_swe;
+wire [15:0] ra_dma_lo = 16'h0404 + { 4'd0, dma_addr[12:1] };
+wire [15:0] ra_dma_hi = 16'h1404 + { 4'd0, dma_addr[12:1] };
+wire [15:0] ra_shm    = 16'h2404 + { 4'd0, cpu_addr[11:0] };
+wire [15:0] ra_shs    = 16'h2404 + { 4'd0, shr_addr[11:0] };
+
+// Each source is held in a register until the mirror port takes it and the
+// registers are served in turn. CPU writes to the object RAM and sub CPU
+// writes to the shared RAM last a single clock cycle, so they must not be
+// dropped when two sources collide.
+wire [63:0] ras_addr = { ra_dma_hi, ra_dma_lo, ra_shs, ra_shm };
+wire [63:0] ras_din  = { {2{dma_din[15:8]}}, {2{dma_din[7:0]}}, {2{shr_din}}, {2{cpu_dout}} };
+wire [ 7:0] ras_we   = {
+        {2{dma_we[1]}} & (ra_dma_hi[0] ? 2'b10 : 2'b01),
+        {2{dma_we[0]}} & (ra_dma_lo[0] ? 2'b10 : 2'b01),
+        {2{ra_swe   }} & (ra_shs[0]    ? 2'b10 : 2'b01),
+        {2{ra_mwe   }} & (ra_shm[0]    ? 2'b10 : 2'b01) };
+reg  [63:0] rah_addr, rah_din;
+reg  [ 7:0] rah_we;
+reg  [ 1:0] ra_ptr, ra_sel, ra_k;
+reg         ra_any;
+integer     rak;
+
+assign ra_game_addr = rah_addr[ ra_sel*16 +: 16 ];
+assign ra_game_din  = rah_din [ ra_sel*16 +: 16 ];
+assign ra_game_we   = ra_any ? rah_we[ ra_sel*2 +: 2 ] : 2'd0;
+
+always @* begin
+    ra_any = 0;
+    ra_sel = ra_ptr;
+    for( rak=3; rak>=0; rak=rak-1 ) begin
+        ra_k = ra_ptr + rak[1:0];
+        if( rah_we[ ra_k*2 +: 2 ]!=0 ) begin
+            ra_any = 1;
+            ra_sel = ra_k;
+        end
+    end
+end
+
+always @(posedge clk, posedge rst) begin
+    if( rst ) begin
+        rah_we <= 0;
+        ra_ptr <= 0;
+    end else begin
+        if( ra_any ) ra_ptr <= ra_sel + 2'd1;
+        for( rak=0; rak<4; rak=rak+1 ) begin
+            if( ras_we[ rak*2 +: 2 ]!=0 ) begin
+                rah_addr[ rak*16 +: 16 ] <= ras_addr[ rak*16 +: 16 ];
+                rah_din [ rak*16 +: 16 ] <= ras_din [ rak*16 +: 16 ];
+                rah_we  [ rak*2  +: 2  ] <= ras_we  [ rak*2  +: 2  ];
+            end else if( ra_any && ra_sel==rak ) begin
+                rah_we  [ rak*2  +: 2  ] <= 2'd0;
+            end
+        end
+    end
+end
+
 always @(posedge clk) begin
     if( prog_we && header ) begin
         if( prog_addr==0 )
@@ -79,6 +144,8 @@ jtkiwi_main u_main(
     .shr_din        ( shr_din       ),
     .shr_cs         ( shr_cs        ),
     .mshramen       ( mshramen      ),
+    .ra_mwe         ( ra_mwe        ),
+    .ra_swe         ( ra_swe        ),
     // Sound
     .snd_rstn       ( snd_rstn      ),
 

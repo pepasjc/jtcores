@@ -25,6 +25,10 @@ module jtpaclan_sound(
     input        [ 7:0] ram_dout,
     output              ram_we,
     output       [ 7:0] ram_din,
+    // RetroAchievements tap: MCU RAM writes (data is ram_din) at their mirror
+    // offset (FBNeo "All Ram" address - 0x6E000)
+    output       [15:0] ra_addr,
+    output              ra_we,
 
     output reg          rom_cs,
     output       [12:0] rom_addr,
@@ -48,6 +52,14 @@ assign ram_addr = A[11:0];
 assign ram_we   = ram_cs & wr;
 assign ram_din  = mcu_dout;
 assign rom_addr = A[12:0];
+
+// RetroAchievements tap. FBNeo (d_pacland) keeps MCU RAM 0xC000-0xC7FF at
+// 0x71800 and the HD63701 internal RAM (0x80-0xFF) at 0x72000; the mirror
+// starts at 0x6E000. Internal RAM is written inside jtframe_6801mcu, but the
+// address, wr and dout are visible here. FBNeo does not store 0xC800-0xCFFF.
+wire   ra_iram = wr && A[15:7]==9'h001;
+assign ra_we   = (ram_we && !A[11]) || ra_iram;
+assign ra_addr = ra_iram ? 16'h4000 + { 9'd0, A[6:0] } : 16'h3800 + { 5'd0, A[10:0] };
 
 always @(posedge clk) if(irq_ctl) irq_ack <= A[13];
 // Address decoder
@@ -153,7 +165,7 @@ jtcus30 u_wav(
 );
 `else
     initial rom_cs=0;
-    assign c30_dout=0, embd_addr=0, ram_addr=0,
+    assign c30_dout=0, embd_addr=0, ram_addr=0, ra_addr=0, ra_we=0,
     ram_we=0, ram_din=0, rom_addr=0, bus_busy=0, cus30_l=0, cus30_r=0;
 `endif
 endmodule

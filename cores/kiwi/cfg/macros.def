@@ -37,6 +37,11 @@ JTFRAME_PXLCLK=6
 JTFRAME_ARX=5
 JTFRAME_ARY=4
 CORE_OSD=OD,Button aid,Off,On
+# RetroAchievements: FBNeo's d_tnzs All Ram from offset 0 (object RAM at
+# 0x404, shared RAM at 0x2404) tapped in jtkiwi_game (ports ra_game_*)
+JTFRAME_RA_MIRROR
+JTFRAME_RA_TAP
+JTFRAME_RA_AW=14
 
 [mist]
 -JTFRAME_CREDITS

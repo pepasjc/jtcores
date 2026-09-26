@@ -21,6 +21,65 @@ assign dip_flip     = flip;
 
 always @(posedge clk) lvbl_ps <= LVBL & dip_pause;
 
+// RetroAchievements tap (JTFRAME_RA_TAP, mem.yaml ports ra_game_*).
+// FBNeo's d_pacland "All Ram" starts with the ROMs; the RAM is at
+// 0x6E000-0x72087. Mirror offset = RA address - 0x6E000:
+//   VidRAM0 0x0000, VidRAM1 0x1000, SprRAM 0x2000 (main CPU 0x0000-0x37FF,
+//   so the offset is the CPU address), MCU RAM 0x3800, MCU internal RAM 0x4000
+wire [15:0] ra_mcu_addr, ra_bus_addr;
+wire        ra_mcu_we, ra_bus_we;
+
+assign ra_bus_we   = |{ bg_we, fg_we, olut_we };
+assign ra_bus_addr = { 2'd0, main_addr[13:0] };
+
+// Each source is held in a register until the mirror port takes it and the
+// registers are served in turn, so a long CPU write strobe cannot hide a
+// write from the other CPU.
+wire [63:0] ras_addr = { 32'd0, ra_mcu_addr, ra_bus_addr };
+wire [63:0] ras_din  = { 32'd0, {2{sndram_din}}, {2{cpu_dout}} };
+wire [ 7:0] ras_we   = { 4'd0,
+        {2{ra_mcu_we}} & (ra_mcu_addr[0] ? 2'b10 : 2'b01),
+        {2{ra_bus_we}} & (ra_bus_addr[0] ? 2'b10 : 2'b01) };
+reg  [63:0] rah_addr, rah_din;
+reg  [ 7:0] rah_we;
+reg  [ 1:0] ra_ptr, ra_sel, ra_k;
+reg         ra_any;
+integer     rak;
+
+assign ra_game_addr = rah_addr[ ra_sel*16 +: 16 ];
+assign ra_game_din  = rah_din [ ra_sel*16 +: 16 ];
+assign ra_game_we   = ra_any ? rah_we[ ra_sel*2 +: 2 ] : 2'd0;
+
+always @* begin
+    ra_any = 0;
+    ra_sel = ra_ptr;
+    for( rak=3; rak>=0; rak=rak-1 ) begin
+        ra_k = ra_ptr + rak[1:0];
+        if( rah_we[ ra_k*2 +: 2 ]!=0 ) begin
+            ra_any = 1;
+            ra_sel = ra_k;
+        end
+    end
+end
+
+always @(posedge clk, posedge rst) begin
+    if( rst ) begin
+        rah_we <= 0;
+        ra_ptr <= 0;
+    end else begin
+        if( ra_any ) ra_ptr <= ra_sel + 2'd1;
+        for( rak=0; rak<4; rak=rak+1 ) begin
+            if( ras_we[ rak*2 +: 2 ]!=0 ) begin
+                rah_addr[ rak*16 +: 16 ] <= ras_addr[ rak*16 +: 16 ];
+                rah_din [ rak*16 +: 16 ] <= ras_din [ rak*16 +: 16 ];
+                rah_we  [ rak*2  +: 2  ] <= ras_we  [ rak*2  +: 2  ];
+            end else if( ra_any && ra_sel==rak ) begin
+                rah_we  [ rak*2  +: 2  ] <= 2'd0;
+            end
+        end
+    end
+end
+
 always @* begin
     case( debug_bus[7:6] )
         0: dbg_mux = st_video;
@@ -114,6 +173,8 @@ jtpaclan_sound u_sound(
     .ram_dout   (sndram_dout),
     .ram_we     (sndram_we  ),
     .ram_din    (sndram_din ),
+    .ra_addr    (ra_mcu_addr),
+    .ra_we      ( ra_mcu_we ),
 
     .embd_addr  ( mcu_addr  ),
     .embd_data  ( mcu_data  ),
