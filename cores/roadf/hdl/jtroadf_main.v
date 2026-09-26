@@ -55,7 +55,10 @@ module jtroadf_main(
     input               ioctl_ram,
     input               ioctl_wr,
     input      [ 7:0]   ioctl_dout,
-    output     [ 7:0]   ioctl_din
+    output     [ 7:0]   ioctl_din,
+    // RetroAchievements tap (see mem.yaml ports)
+    output     [15:0]   ra_addr,
+    output     [ 1:0]   ra_we
 );
 
 `ifndef NOMAIN
@@ -224,8 +227,15 @@ jtframe_sys6809_dma #(.RAM_AW(12),.KONAMI(1)) u_cpu(
     .dma_we     ( nvram_we      )
 );
 
+// RetroAchievements tap: 6809 work RAM 3000-37FF = FBNeo All Ram 0 (DrvM6809RAM).
+// The NVRAM half (3800-3FFF) is not in FBNeo's All Ram
+assign ra_addr = {5'd0, A[10:0]};
+assign ra_we   = {2{ram_cs & ~A[11] & ~RnW}} & (ra_addr[0] ? 2'b10 : 2'b01);
+
 `else
 assign cpu_cen   = 1'b0;
+assign ra_addr   = 16'd0;
+assign ra_we     = 2'd0;
 assign rom_addr  = 16'd0;
 assign cpu_rnw   = 1'b1;
 assign cpu_dout  = 8'd0;

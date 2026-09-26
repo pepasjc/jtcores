@@ -15,3 +15,9 @@ JTFRAME_IOCTL_RD=2048
 
 # Video
 JTFRAME_VERTICAL
+
+[mister]
+# RetroAchievements: 6809 work RAM tapped in jtroadf_main (mem.yaml ports)
+JTFRAME_RA_MIRROR
+JTFRAME_RA_TAP
+JTFRAME_RA_AW=13

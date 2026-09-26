@@ -28,3 +28,9 @@ JTFRAME_BA3_START    =0xc0000
 debug JTFRAME_IOCTL_RD=4096
 debug JTFRAME_IOCTL_RD+=2048
 debug JTFRAME_IOCTL_RD+=4
+
+[mister]
+# RetroAchievements: main Z80 writes to work/sprite/palette/video RAM tapped in the main CPU module (mem.yaml ports)
+JTFRAME_RA_MIRROR
+JTFRAME_RA_TAP
+JTFRAME_RA_AW=15

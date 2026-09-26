@@ -28,6 +28,11 @@ audio:
         { r: 2k, c: 100n }, { r: 1.25k, c: 517n },
       ], rc_en: true }
     - { name: rdac,  data_width: 8, unsigned: true, rsum: 220, rc: [{ r: 0.8k, c: 470n }], rc_en: true }
+# RetroAchievements tap driven by jtmikie_main (obj RAM + work RAM, CPU address)
+ports:
+  - { name: ra_game_addr, msb: 15 }
+  - { name: ra_game_din,  msb: 15 }
+  - { name: ra_game_we,   msb: 1 }
 download:
   pre_addr: true
   post_data: true

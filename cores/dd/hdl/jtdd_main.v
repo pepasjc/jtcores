@@ -57,7 +57,10 @@ module jtdd_main(
     input              service,
     input              dip_pause,
     input  [7:0]       dipsw_a,
-    input  [7:0]       dipsw_b
+    input  [7:0]       dipsw_b,
+    // RetroAchievements tap (see mem.yaml ports)
+    output     [15:0]  ra_addr,
+    output     [ 1:0]  ra_we
 );
 
 `ifndef NOMAIN
@@ -279,12 +282,18 @@ jtframe_sys6809 #(.RAM_AW(13),.CENDIV(0),.RECOVERY(0)) u_cpu(
     .cpu_din    ( cpu_din   )
 );
 
+// RetroAchievements tap: 6309 work RAM 0000-0FFF (DD1) = FBNeo All Ram 0
+assign ra_addr = {3'd0, A[12:0]};
+assign ra_we   = {2{ram_cs & ~RnW}} & (ra_addr[0] ? 2'b10 : 2'b01);
+
 `else
 assign mcu_nmi_set = 1'b0;
 assign flip        = 1'b0;
 assign cpu_dout    = 8'd0;
 assign cpu_AB      = 13'd0;
 assign RnW         = 1'b1;
+assign ra_addr     = 16'd0;
+assign ra_we       = 2'd0;
 initial begin
     mcu_haltn=0; com_cs=0; pal_cs=0; mcu_rstb=0; snd_irq=0; snd_latch=0;
     cram_cs=0; oram_cs=0; vram_cs=0; scrhpos=0; scrvpos=0; rom_cs=0; rom_addr=0;

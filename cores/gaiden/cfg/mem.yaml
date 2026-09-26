@@ -66,6 +66,7 @@ bram:
     data_width: 16
     rw: true
     unless: [ SMALL_BRAM ]
+    ra_tap: true    # RetroAchievements: 68K work RAM 060000-063FFF, FBNeo All RAM 0x0000
   - name: tram
     addr_width: 12
     data_width: 16

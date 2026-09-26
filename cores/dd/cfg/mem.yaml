@@ -3,6 +3,11 @@ params:
   - { name: PCM1_OFFSET, value: "(`ADPCM1_START-`JTFRAME_BA1_START)>>1" }
   - { name: SCR_OFFSET,  value: "(`SCR_START-`JTFRAME_BA2_START) >>1" }
   - { name: MCU_OFFSET,  value: "(`MCU_START-`JTFRAME_BA3_START)>>1" }
+# RetroAchievements tap driven by the main CPU module
+ports:
+  - { name: ra_game_addr, msb: 15 }
+  - { name: ra_game_din,  msb: 15 }
+  - { name: ra_game_we,   msb: 1 }
 clocks:
   # main and mcu do not share the gate because they are in different clock domains
   # MC6809 module is problematic at 48MHz, hence using clk24

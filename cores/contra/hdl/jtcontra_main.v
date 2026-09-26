@@ -47,7 +47,10 @@ module jtcontra_main(
     input               dip_pause,
     input      [7:0]    dipsw_a,
     input      [7:0]    dipsw_b,
-    input      [3:0]    dipsw_c
+    input      [3:0]    dipsw_c,
+    // RetroAchievements tap (see mem.yaml ports)
+    output     [15:0]   ra_addr,
+    output     [ 1:0]   ra_we
 );
 parameter  GAME=0;
 
@@ -248,11 +251,15 @@ jtframe_sys6809 #(.RAM_AW(RAM_AW),.CENDIV(0)) u_cpu(
     .cpu_dout   ( cpu_dout  ),
     .cpu_din    ( cpu_din   )
 );
+// RetroAchievements tap: 6809 work RAM 1000-1FFF = FBNeo All RAM 0 (DrvHD6309RAM0)
+assign ra_addr = {4'd0, A[11:0]};
+assign ra_we   = {2{ram_cs & ~RnW}} & (ra_addr[0] ? 2'b10 : 2'b01);
+
 `ifdef SIMULATION
 always @(negedge snd_irq) $display("INFO: sound latch %X", snd_latch );
 `endif
 `else
     assign cpu_cen=0,snd_irq=0,snd_latch=0,rom_addr=0,rom_cs=0,cpu_addr=0,
-        cpu_rnw=0,cpu_dout=0,video_bank=0,prio_latch=0;
+        cpu_rnw=0,cpu_dout=0,video_bank=0,prio_latch=0,ra_addr=0,ra_we=0;
 `endif
 endmodule

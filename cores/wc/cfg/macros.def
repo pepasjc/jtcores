@@ -22,3 +22,9 @@ JTFRAME_BA3_START=0x34000
 
 # scene saving
 JTFRAME_IOCTL_RD=7168
+
+[mister]
+# RetroAchievements: main CPU work RAM (main CPU module, mem.yaml ports) + shared RAM (mem.yaml ra_tap)
+JTFRAME_RA_MIRROR
+JTFRAME_RA_TAP
+JTFRAME_RA_AW=15

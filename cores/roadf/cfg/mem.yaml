@@ -21,6 +21,11 @@ clocks:
 download:
   post_addr: true
   post_data: true
+# RetroAchievements tap driven by jtroadf_main (6809 work RAM)
+ports:
+  - { name: ra_game_addr, msb: 15 }
+  - { name: ra_game_din,  msb: 15 }
+  - { name: ra_game_we,   msb: 1 }
 sdram:
   banks:
     - buses:

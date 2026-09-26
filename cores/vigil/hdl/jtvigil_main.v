@@ -42,7 +42,10 @@ module jtvigil_main(
     output  reg        rom_cs,
     input       [ 7:0] rom_data,
     // input       [ 7:0] debug_bus,
-    input              rom_ok
+    input              rom_ok,
+    // RetroAchievements tap (see mem.yaml ports)
+    output      [15:0] ra_addr,
+    output      [ 1:0] ra_we
 );
 `ifndef NOMAIN
 
@@ -165,6 +168,16 @@ jtframe_sysz80 #(
     .rom_ok     ( rom_ok    )
 );
 
+// RetroAchievements tap, at FBNeo's All Ram offsets:
+// work RAM E000-EFFF = 0x0000, sprite RAM C020-C0DF = 0x3000,
+// palette C800-CFFF = 0x3100, video RAM D000-DFFF = 0x3900
+wire ra_obj = obj_cs && A[10:8]==0 && A[7:0]>=8'h20 && A[7:0]<8'he0;
+assign ra_addr = ram_cs ? {  4'd0, A[11:0] } :
+                 ra_obj ? 16'h2fe0 + { 8'd0, A[7:0] } :
+                 pal_cs ? 16'h3100 + { 5'd0, A[10:0] } :
+                          16'h3900 + { 4'd0, A[11:0] };
+assign ra_we   = {2{!wr_n && (ram_cs || ra_obj || pal_cs || scr_cs)}} & (ra_addr[0] ? 2'b10 : 2'b01);
+
 `else
     integer f, fcnt;
     reg [7:0] dump[0:3];
@@ -193,6 +206,8 @@ jtframe_sysz80 #(
     assign  main_addr = 0;
     assign  main_rnw  = 1;
     assign  cpu_dout  = 0;
+    assign  ra_addr   = 0;
+    assign  ra_we     = 0;
 `endif
 
 endmodule

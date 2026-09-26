@@ -46,7 +46,10 @@ module jtwc_main(
     //
     input     [21:0] dipsw,
     input     [ 7:0] debug_bus,
-    output reg[ 7:0] st_dout
+    output reg[ 7:0] st_dout,
+    // RetroAchievements tap (see mem.yaml ports)
+    output    [15:0] ra_addr,
+    output    [ 1:0] ra_we
 );
 `ifndef NOMAIN
 localparam [ 5:0] SPEED=6'h20;
@@ -247,6 +250,10 @@ jtframe_sysz80 #(.RAM_AW(11),.CLR_INT(1),.RECOVERY(1)) u_cpu(
     .rom_cs     ( rom_cs      ),
     .rom_ok     ( rom_ok      )
 );
+// RetroAchievements tap: work RAM C000-C7FF = FBNeo All Ram 0
+// (shared RAM C800-CFFF is tapped in mem.yaml, both CPUs go through its mux)
+assign ra_addr = {5'd0, A[10:0]};
+assign ra_we   = {2{ram_cs & ~wr_n}} & (ra_addr[0] ? 2'b10 : 2'b01);
 `else
 initial begin
     mmx_c8  = 0;
@@ -262,6 +269,6 @@ initial begin
     rom_cs  = 0;
     m2s     = 0;
 end
-assign {cpu_dout,wr_n,rom_addr,form0,st_dout} = 0;
+assign {cpu_dout,wr_n,rom_addr,form0,st_dout,ra_addr,ra_we} = 0;
 `endif
 endmodule

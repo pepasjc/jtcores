@@ -28,6 +28,7 @@ assign debug_view = debug_mux;
 assign pal1_we   = ~main_rnw & pal_cs;
 assign scr1_we   = ~main_rnw & scr1_ramcs;
 assign ioctl_din = dump_mux;
+assign ra_game_din = {2{main_dout}}; // RetroAchievements tap data
 
 always @(posedge clk) begin
     case(ioctl_addr[1:0])
@@ -46,6 +47,8 @@ end
 
 /* verilator tracing_off */
 jtvigil_main u_main(
+    .ra_addr     ( ra_game_addr ),
+    .ra_we       ( ra_game_we   ),
     .rst         ( rst        ),
     .clk         ( clk        ),
     .cpu_cen     ( cpu_cen    ),

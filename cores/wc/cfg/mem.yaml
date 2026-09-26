@@ -2,6 +2,11 @@ params:
   - { name: SUB_OFFSET, value: "(`SUB_START)>>1" }
   - { name: PCM_OFFSET, value: "(`PCM_START-`JTFRAME_BA1_START)>>1" }
   - { name: SCR_OFFSET, value: "(`SCR_START-`JTFRAME_BA2_START)>>1" }
+# RetroAchievements tap driven by the main CPU module (work RAM)
+ports:
+  - { name: ra_game_addr, msb: 15 }
+  - { name: ra_game_din,  msb: 15 }
+  - { name: ra_game_we,   msb: 1 }
 clocks:
   clk:
     # Main CPU uses 4MHz crystal (checked on original board)
@@ -62,6 +67,8 @@ bram:
     addr_width: 11
     data_width: 8
     rw: true
+    ra_tap: true                # RetroAchievements: shared RAM C800-CFFF (main and sub),
+    ra_tap_offset: "16'h5800"   # FBNeo All Ram 0x5800
   - name: pal
     addr_width: 11
     data_width: 16

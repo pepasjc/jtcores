@@ -22,3 +22,9 @@ JTFRAME_IOCTL_RD+=14
 [mist|sidi]
 # not enough BRAM
 JTFRAME_SKIP
+
+[mister]
+# RetroAchievements: 68K work RAM BRAM (mem.yaml ra_tap), FBNeo All RAM 0-0x3FFF
+JTFRAME_RA_MIRROR
+JTFRAME_RA_TAP
+JTFRAME_RA_AW=14

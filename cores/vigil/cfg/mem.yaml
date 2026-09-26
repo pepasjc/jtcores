@@ -1,6 +1,11 @@
 params:
   - { name: PCM_OFFSET,  value: "(`PCM_START -`JTFRAME_BA1_START)>>1"}
   - { name: SCR2_OFFSET, value: "(`SCR2_START-`JTFRAME_BA2_START)>>1"}
+# RetroAchievements tap driven by the main CPU module
+ports:
+  - { name: ra_game_addr, msb: 15 }
+  - { name: ra_game_din,  msb: 15 }
+  - { name: ra_game_we,   msb: 1 }
 clocks:
   clk:
     - freq: 3579545

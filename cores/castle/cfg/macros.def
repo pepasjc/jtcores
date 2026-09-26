@@ -27,3 +27,9 @@ JTFRAME_OSD_NOCREDITS
 JTFRAME_ARX=5
 JTFRAME_ARY=4
 JTFRAME_NOHQ2X
+
+[mister]
+# RetroAchievements: palette + work RAM tapped by CPU address in jtcastle_main (mem.yaml ports)
+JTFRAME_RA_MIRROR
+JTFRAME_RA_TAP
+JTFRAME_RA_AW=13

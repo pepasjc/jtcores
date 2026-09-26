@@ -18,3 +18,9 @@ JTFRAME_BA3_START= 0x110000
 OBJ_START        = 0x110000
 MCU_START        = 0x210000
 JTFRAME_PROM_START=0x220000
+
+[mister]
+# RetroAchievements: inherited from dd's macros; no RA sets / taps for dd2
+-JTFRAME_RA_MIRROR
+-JTFRAME_RA_TAP
+-JTFRAME_RA_AW

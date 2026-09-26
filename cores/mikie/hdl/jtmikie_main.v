@@ -44,7 +44,10 @@ module jtmikie_main(
     input               dip_pause,
     input      [7:0]    dipsw_a,
     input      [7:0]    dipsw_b,
-    input      [1:0]    dipsw_c
+    input      [1:0]    dipsw_c,
+    // RetroAchievements tap (see mem.yaml ports)
+    output     [15:0]   ra_addr,
+    output     [ 1:0]   ra_we
 );
 
 `ifndef NOMAIN
@@ -173,8 +176,17 @@ jtframe_sys6809 #(.RAM_AW(10)) u_cpu(
     .cpu_din    ( cpu_din   )
 );
 
+// RetroAchievements tap, keyed by CPU address (jtmikie_video scrambles the obj RAM
+// address): FBNeo All Ram has DrvM6809RAM (0000-00FF, not decoded here) at 0 and
+// DrvSprRAM (2800-37FF: obj RAM + work RAM) at 0x100
+wire ra_zp = VMA && A[15:8]==0;
+assign ra_addr = ra_zp ? {8'd0, A[7:0]} : A - 16'h2700;
+assign ra_we   = {2{(objram_cs | ram_cs | ra_zp) & ~RnW}} & (ra_addr[0] ? 2'b10 : 2'b01);
+
 `else
 assign cpu_cen  = 1'b0;
+assign ra_addr  = 16'd0;
+assign ra_we    = 2'd0;
 assign rom_addr = 16'd0;
 assign cpu_rnw  = 1'b1;
 assign cpu_dout = 8'd0;

@@ -34,6 +34,7 @@ assign cram_we    = {2{cram_cs & ~cpu_wrn}} & { ~main_addr[0], main_addr[0]};
 assign char_dout  = main_addr[0] ? char16_dout[7:0] : char16_dout[15:8];
 assign mcu_cen    = turbo_l ? mcu_cen12 : mcu_cen6;
 assign cpu_cen    = turbo_l ? cen6 : cen3;
+assign ra_game_din = {2{cpu_dout}}; // RetroAchievements tap data
 
 always @(posedge clk) if( mcu_cen && cpu_cen ) turbo_l <= turbo;
 
@@ -41,6 +42,8 @@ always @(posedge clk) if( mcu_cen && cpu_cen ) turbo_l <= turbo;
 // CPU and sub CPU from slower clock in order to
 // prevent timing error in 6809 CC bit Z
 jtdd_main u_main(
+    .ra_addr        ( ra_game_addr  ),
+    .ra_we          ( ra_game_we    ),
     .clk            ( clk24         ),
     .rst            ( rst24         ),
     .cpu_cen        ( cpu_cen       ),

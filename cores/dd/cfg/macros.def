@@ -32,3 +32,9 @@ JTFRAME_ARX=5
 JTFRAME_ARY=4
 
 [pocket]
+
+[mister]
+# RetroAchievements: 6309 work RAM (inside jtframe_sys6809) tapped in the main CPU module (mem.yaml ports)
+JTFRAME_RA_MIRROR
+JTFRAME_RA_TAP
+JTFRAME_RA_AW=13

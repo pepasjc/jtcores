@@ -15,3 +15,9 @@ JTFRAME_FLIP_RESET
 
 # Video
 JTFRAME_VERTICAL
+
+[mister]
+# RetroAchievements: obj/work RAM tapped by CPU address in jtmikie_main (mem.yaml ports)
+JTFRAME_RA_MIRROR
+JTFRAME_RA_TAP
+JTFRAME_RA_AW=13

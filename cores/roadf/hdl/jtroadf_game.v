@@ -57,7 +57,11 @@ always @(posedge clk) begin
     if( header && prog_we && prog_addr[2:0]==0 ) is_hyper <= prog_data[0];
 end
 
+assign ra_game_din = {2{cpu_dout}}; // RetroAchievements tap data
+
 jtroadf_main u_main(
+    .ra_addr        ( ra_game_addr  ),
+    .ra_we          ( ra_game_we    ),
     .rst            ( rst24         ),
     .clk            ( clk24         ),        // 24 MHz
     .cpu4_cen       ( cpu4_cen      ),

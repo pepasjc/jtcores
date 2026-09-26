@@ -29,7 +29,11 @@ always @(posedge clk) begin
 end
 
 /* verilator tracing_on */
+assign ra_game_din = {2{mdout}}; // RetroAchievements tap data
+
 jtwc_main u_main(
+    .ra_addr    ( ra_game_addr  ),
+    .ra_we      ( ra_game_we    ),
     .rst        ( rst           ),
     .clk        ( clk           ),
     .cen        ( cen_pause     ),

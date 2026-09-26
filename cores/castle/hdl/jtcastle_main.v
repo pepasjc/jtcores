@@ -54,7 +54,10 @@ module jtcastle_main(
     input      [7:0]    dipsw_a,
     input      [7:0]    dipsw_b,
     input      [3:0]    dipsw_c,
-    output              buserror
+    output              buserror,
+    // RetroAchievements tap (see mem.yaml ports)
+    output     [15:0]   ra_addr,
+    output     [ 1:0]   ra_we
 );
 `ifndef NOMAIN
 
@@ -174,6 +177,12 @@ always @(posedge clk, posedge rst) begin
 end
 
 assign buserror=0;
+
+// RetroAchievements tap, keyed by CPU address so the 0800-0FFF window banked by
+// `work` reads flat, as in FBNeo: DrvPalRAM (CPU 0600-1FFF) is All Ram 0x200
+wire ra_cs = A[15:8]>=8'h06 && A[15:8]<8'h20;
+assign ra_addr = A - 16'h0400;
+assign ra_we   = {2{ra_cs & cpu_we}} & (ra_addr[0] ? 2'b10 : 2'b01);
 /* xxverilator tracing_off */
 jtkcpu u_cpu(
     .rst    ( rst       ),
@@ -210,6 +219,8 @@ assign gfx1_cs  = 0;
 assign gfx2_cs  = 0;
 assign pal_cs   = 0;
 assign buserror = 0;
+assign ra_addr  = 0;
+assign ra_we    = 0;
 
 initial begin
     snd_irq    = 0;
