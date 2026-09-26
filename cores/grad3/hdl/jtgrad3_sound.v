@@ -30,7 +30,11 @@ module jtgrad3_sound(
     output signed [10:0] pcm,
 
     input    [ 7:0] debug_bus,
-    output   [ 7:0] st_dout
+    output   [ 7:0] st_dout,
+    // RetroAchievements tap: Z80 RAM writes (0xF800-0xFFFF)
+    output          ra_we,
+    output   [10:0] ra_addr,
+    output   [ 7:0] ra_din
 );
 
 `ifndef NOSOUND
@@ -49,6 +53,9 @@ assign fm_csn    = ~fm_cs;
 assign rom_addr  = A;
 assign mem_acc   = !mreq_n && rfsh_n;
 assign st_dout   = debug_bus[5] ? st_pcm : { bank[3:0], snd_latch[3:0] };
+assign ra_we     = ram_cs & ~wr_n; // same strobe as jtframe_sysz80's RAM
+assign ra_addr   = A[10:0];
+assign ra_din    = cpu_dout;
 
 always @* begin
     rom_cs   = 0;
@@ -158,6 +165,7 @@ jt007232 u_k7232(
 );
 
 `else
+assign ra_we=0, ra_addr=0, ra_din=0;
 assign rom_addr=0, pcma_addr=0, pcmb_addr=0, pcma_cs=0, pcmb_cs=0,
        fm_l=0, fm_r=0, pcm=0, st_dout=0;
 initial rom_cs=0;

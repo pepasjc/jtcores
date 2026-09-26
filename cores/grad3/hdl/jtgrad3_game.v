@@ -32,6 +32,44 @@ always @(posedge clk) begin
     cen_num <= turbo ? 5'd8 : 5'd5;
 end
 
+// RetroAchievements tap (mem.yaml ports ra_game_*). FBNeo's gradius3 All Ram is
+// Z80 RAM (0x800), soundlatch (1 byte), main RAM, sub RAM, shared RAM (0x4000
+// each), char RAM (0x20000) and palette (0x1000). The 68K buffers start at odd
+// offsets, so the mirror keeps them word-aligned one byte lower and the ARM
+// region table adds the byte back:
+//   mirror 0x0000-0x07FF  Z80 RAM   (RA 0x00000)
+//   mirror 0x0800-0x47FF  main RAM  (RA 0x00801, main 0x040000)
+//   mirror 0x4800-0x87FF  sub RAM   (RA 0x04801, sub  0x100000)
+//   mirror 0x8800-0xC7FF  shared    (RA 0x08801, main 0x100000 / sub 0x200000)
+//   mirror 0xC800-0xD7FF  palette   (RA 0x2C801, main 0x080000)
+wire        z80_ra_we;
+wire [10:0] z80_ra_addr;
+wire [ 7:0] z80_ra_din;
+wire [15:0] ra_m_addr, ra_s_addr, ra_z_addr;
+wire [ 1:0] ra_m_we, ra_s_we, ra_z_we;
+
+// each CPU writes one RAM at a time
+assign ra_m_addr = |mram_we    ? 16'h0800 + { 2'd0, main_addr[13:1], 1'b0 } :
+                   |m_shram_we ? 16'h8800 + { 2'd0, main_addr[13:1], 1'b0 } :
+                                 16'hC800 + { 4'd0, main_addr[11:1], 1'b0 };
+assign ra_m_we   = mram_we | m_shram_we | pal_we;
+assign ra_s_addr = |sram_we    ? 16'h4800 + { 2'd0, s_addr[13:1], 1'b0 } :
+                                 16'h8800 + { 2'd0, s_addr[13:1], 1'b0 };
+assign ra_s_we   = sram_we | s_shram_we;
+assign ra_z_addr = { 5'd0, z80_ra_addr };
+assign ra_z_we   = {2{z80_ra_we}} & (z80_ra_addr[0] ? 2'b10 : 2'b01);
+
+jtgrad3_ra #(.N(3)) u_ra(
+    .rst        ( rst           ),
+    .clk        ( clk           ),
+    .addr       ( { ra_z_addr, ra_s_addr, ra_m_addr } ),
+    .din        ( { {2{z80_ra_din}}, s_dout, m_dout } ),
+    .we         ( { ra_z_we, ra_s_we, ra_m_we } ),
+    .ra_addr    ( ra_game_addr  ),
+    .ra_din     ( ra_game_din   ),
+    .ra_we      ( ra_game_we    )
+);
+
 jtgrad3_main u_main(
     .rst        ( rst          ),
     .clk        ( clk          ),
@@ -230,7 +268,11 @@ jtgrad3_sound u_sound(
     .pcm        ( pcm       ),
 
     .debug_bus  ( debug_bus ),
-    .st_dout    ( st_snd    )
+    .st_dout    ( st_snd    ),
+    // RetroAchievements tap
+    .ra_we      ( z80_ra_we   ),
+    .ra_addr    ( z80_ra_addr ),
+    .ra_din     ( z80_ra_din  )
 );
 
 endmodule

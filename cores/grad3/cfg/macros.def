@@ -30,3 +30,11 @@ JTFRAME_BA3_LEN=64
 
 [sidi|mist]
 JTFRAME_SKIP
+
+[mister]
+# RetroAchievements: Z80 RAM, main/sub work RAM, shared RAM and palette are
+# tapped in jtgrad3_game (mem.yaml ports ra_game_*) into a 64 kB mirror; the
+# FBNeo offsets are mapped by the ARM region table (see jtgrad3_game.v)
+JTFRAME_RA_MIRROR
+JTFRAME_RA_TAP
+JTFRAME_RA_AW=16

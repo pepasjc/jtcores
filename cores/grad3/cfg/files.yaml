@@ -8,6 +8,7 @@ grad3:
     - jtgrad3_arbiter.v
     - jtgrad3_colmix.v
     - jtgrad3_sound.v
+    - jtgrad3_ra.v
 aliens:
   - get:
     - jt051962.v

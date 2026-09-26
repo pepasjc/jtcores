@@ -85,6 +85,31 @@ assign subram_we   = ~sub_rnw;
 assign subram_din  = sub_dout;
 assign subrom_addr = sub_addr;
 
+`ifdef JTFRAME_RA_TAP
+// RetroAchievements tap (mem.yaml ports ra_game_*). FBNeo's OutRun All Ram
+// starts with the sub CPU RAM (0x0000, "shared RAM" at sub 0x060000) and the
+// main CPU work RAM (0x8000, main 0x060000), so the 64 kB mirror is an identity
+// map of RA 0x0000-0xFFFF. Sub RAM is in SDRAM; the main CPU also reaches it
+// by taking the sub bus, so the sub bus sees every write to it.
+wire [15:0] ra_m_addr, ra_s_addr;
+wire [ 1:0] ra_s_we;
+
+assign ra_m_addr = { 1'b1, main_addr[14:1], 1'b0 };
+assign ra_s_addr = { 1'b0, sub_addr[14:1],  1'b0 };
+assign ra_s_we   = {2{subram_cs & ~sub_rnw}} & ~sub_dsn;
+
+jtoutrun_ra #(.N(2)) u_ra(
+    .rst        ( rst48         ),
+    .clk        ( clk48         ),
+    .addr       ( { ra_s_addr, ra_m_addr } ),
+    .din        ( { sub_dout,  xram_din  } ),
+    .we         ( { ra_s_we,   wram_we   } ),
+    .ra_addr    ( ra_game_addr  ),
+    .ra_din     ( ra_game_din   ),
+    .ra_we      ( ra_game_we    )
+);
+`endif
+
 assign key_we    = prom_we && prog_addr[21:13]==KEY_PROM[21:13];
 assign fd1089_we = prom_we && prog_addr[21: 8]==FD_PROM [21: 8];
 

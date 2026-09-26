@@ -1,6 +1,11 @@
 params:
   - { name: PCM_OFFSET, value: "(`PCM_START-`JTFRAME_BA2_START) >> 1" }
   - { name: GFX_OFFSET, value: "(`GFX_START-`JTFRAME_BA1_START) >> 1" }
+# RetroAchievements tap driven by jtgrad3_game (jtgrad3_ra merges main, sub and Z80 writes)
+ports:
+  - { name: ra_game_addr, msb: 15 }
+  - { name: ra_game_din,  msb: 15 }
+  - { name: ra_game_we,   msb: 1 }
 clocks:
   clk48:
     - freq: 24M

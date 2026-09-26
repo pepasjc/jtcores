@@ -31,6 +31,40 @@ assign sram_din   = s_dout;
 assign mram_din   = m_dout;
 assign stile_addr = s_addr;
 
+// RetroAchievements tap (mem.yaml ports ra_game_*). FBNeo's twin16 All RAM
+// starts with sprite RAM (0x00000), two sprite buffers, shared RAM (0x0C000),
+// main work RAM (0x1C000), palette and the fix layer RAM (0x21000). The four
+// RAMs RA sets read are packed into the 64 kB mirror; the ARM region table
+// maps them back:
+//   mirror 0x0000-0x3FFF  sprite RAM (RA 0x00000, main 0x140000 / sub 0x400000)
+//   mirror 0x4000-0x7FFF  shared RAM (RA 0x0C000, 0x040000 both CPUs)
+//   mirror 0x8000-0xBFFF  main RAM   (RA 0x1C000, main 0x060000, SDRAM)
+//   mirror 0xC000-0xFFFF  fix RAM    (RA 0x21000, main 0x100000)
+// Only CPU writes to sprite RAM are tapped: the sprite DMA writes FBNeo's
+// processed list at 0x3000-0x3FFF, which no RA set reads.
+wire [15:0] ra_m_addr, ra_s_addr, ra_o_addr;
+wire [ 1:0] ra_m_we, ra_mram_we;
+
+// the main CPU writes one RAM at a time
+assign ra_mram_we = {2{mram_cs & mram_we}} & ~mram_dsn;
+assign ra_m_addr  = |ra_mram_we ? { 2'b10, m_addr[13:1], 1'b0 } :
+                    |shm_we     ? { 2'b01, m_addr[13:1], 1'b0 } :
+                                  { 2'b11, m_addr[13:1], 1'b0 };
+assign ra_m_we    = ra_mram_we | shm_we | fx_we;
+assign ra_s_addr  = { 2'b01, s_addr[13:1], 1'b0 };
+assign ra_o_addr  = { 2'b00, osha_addr,    1'b0 };
+
+jttwin16_ra #(.N(3)) u_ra(
+    .rst        ( rst           ),
+    .clk        ( clk           ),
+    .addr       ( { ra_o_addr, ra_s_addr, ra_m_addr } ),
+    .din        ( { v_din,     s_dout,    m_dout    } ),
+    .we         ( { osha_we,   shs_we,    ra_m_we   } ),
+    .ra_addr    ( ra_game_addr  ),
+    .ra_din     ( ra_game_din   ),
+    .ra_we      ( ra_game_we    )
+);
+
 `ifdef SCRTILE_SDRAM
 wire [15:0] stile_dout = stile_data;
 assign stile_dsn = sram_dsn;

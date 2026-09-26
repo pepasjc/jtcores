@@ -6,6 +6,12 @@ params:
   - { name: STRAM_OFFSET,value: "22'h100000" }
   - { name: MRAM_OFFSET, value: "22'h100000" }
   - { name: SRAM_OFFSET, value: "GFX_OFFSET+GFX_LEN" }
+# RetroAchievements tap driven by jttwin16_game (jttwin16_ra merges the writes
+# of both CPUs to main, shared, sprite and fix RAM)
+ports:
+  - { name: ra_game_addr, msb: 15 }
+  - { name: ra_game_din,  msb: 15 }
+  - { name: ra_game_we,   msb: 1 }
 clocks:
   clk48:
     - freq: 3579545

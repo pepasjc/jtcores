@@ -9,6 +9,12 @@ params:
   - { name: SRAM_OFFSET, value: 22'h18_0000 }
   - { name: RD0_OFFSET,  value: "3<<22 | (ROAD_START-`JTFRAME_BA3_START)>>1" }
   - { name: RD1_OFFSET,  value: RD0_OFFSET+62'h4000 }
+# RetroAchievements tap driven by jtoutrun_game (jtoutrun_ra merges the main
+# work RAM and sub RAM writes)
+ports:
+  - { name: ra_game_addr, msb: 15 }
+  - { name: ra_game_din,  msb: 15 }
+  - { name: ra_game_we,   msb: 1 }
 clocks:
   clk48:
     - freq: 8M

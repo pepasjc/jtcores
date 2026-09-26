@@ -18,6 +18,13 @@ JTFRAME_COLORW=6
 # and the 32kB used for NVRAM
 # Disabled the OSD logo or the credits won't make it fit
 
+[mister]
+# RetroAchievements: inherited from outrun's macros; no RA sets for Super Hang-On
+-JTFRAME_RA_MIRROR
+-JTFRAME_RA_TAP
+-JTFRAME_RA_AW
+-JTFRAME_RA_DDR_ARB
+
 [sidi128]
 -JTFRAME_LF_SDRAM_BUFFER
 

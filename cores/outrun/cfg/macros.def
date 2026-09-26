@@ -70,5 +70,15 @@ JTFRAME_CREDITS_HSTART=32
 CORE_OSD=OKM,Control Type,A.Stick,A.Triggers,A.Wheel;
 #JTFRAME_CHEAT
 
+[mister]
+# RetroAchievements: sub RAM (SDRAM) and main work RAM (BRAM) tapped in
+# jtoutrun_game (mem.yaml ports ra_game_*); 64 kB identity mirror of FBNeo's
+# All Ram 0x0000-0xFFFF. The DDR line-frame buffer may use DDR in VBlank, so
+# the mirror arbitrates for the port burst by burst.
+JTFRAME_RA_MIRROR
+JTFRAME_RA_TAP
+JTFRAME_RA_AW=16
+JTFRAME_RA_DDR_ARB
+
 [sidi128]
 JTFRAME_LF_SDRAM_BUFFER

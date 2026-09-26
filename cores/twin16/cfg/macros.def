@@ -35,6 +35,14 @@ JTFRAME_IOCTL_RD=32768
 debug JTFRAME_IOCTL_RD=315392
 debug JTFRAME_IOCTL_RD+=12
 
+[mister]
+# RetroAchievements: sprite, shared, main work and fix RAM tapped in
+# jttwin16_game (mem.yaml ports ra_game_*) into a 64 kB mirror; the FBNeo
+# offsets are mapped by the ARM region table (see jttwin16_game.v)
+JTFRAME_RA_MIRROR
+JTFRAME_RA_TAP
+JTFRAME_RA_AW=16
+
 [pocket]
 JTFRAME_BA2_WEN
 SCRTILE_SDRAM
