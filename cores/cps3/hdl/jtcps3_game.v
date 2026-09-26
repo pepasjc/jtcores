@@ -229,6 +229,10 @@ jtcps3_main u_main(
     .cpuba0_we      ( cpuba0_we         ),
     .cpuba0_din     ( cpuba0_din        ),
     .cpuba0_dsn     ( cpuba0_dsn        ),
+    // RetroAchievements tap (mem.yaml ports ra_game_*)
+    .ra_addr        ( ra_game_addr      ),
+    .ra_din         ( ra_game_din       ),
+    .ra_we          ( ra_game_we        ),
     .simm2_addr     ( simm2_addr        ),
     .simm2_rd       ( simm2_rd          ),
     .simm2_data     ( simm2_data        ),

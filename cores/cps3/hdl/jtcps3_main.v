@@ -31,6 +31,11 @@ module jtcps3_main(
     output reg          cpuba0_we,
     output reg  [31:0]  cpuba0_din,
     output reg  [ 3:0]  cpuba0_dsn,
+    // RetroAchievements tap (JTFRAME_RA_MIRROR): main RAM writes as mirror
+    // byte address, 16-bit data and byte enables (see jtcps3_ra_map.v)
+    output reg  [15:0]  ra_addr,
+    output reg  [15:0]  ra_din,
+    output reg  [ 1:0]  ra_we,
     // SIMM 2 cache lane
     output      [22:2]  simm2_addr,
     output              simm2_rd,
@@ -515,6 +520,37 @@ always @(posedge clk) begin
     end
 end
 
+// RetroAchievements tap. The cpuba0 cache lane is write-back, so SDRAM lags
+// the CPU; the tap takes main RAM writes on the CPU side of the lane, when
+// the lane acknowledges a stable request (the cycle the CPU sees its write
+// done). While a write waits for ok the tap repeats it with the same data.
+// FBNeo stores each SH-2 longword little-endian: RA byte N = SH-2 byte N^3.
+// RAM accesses come through the halfword adapter, so one half is written:
+// dsn[1:0] (A[1]=1, SH-2 bytes 4k+2/4k+3) -> mirror bytes 4k+1/4k+0 and
+// dsn[3:2] (A[1]=0, SH-2 bytes 4k+0/4k+1) -> mirror bytes 4k+3/4k+2.
+wire       ra_hit;
+wire [4:0] ra_slot;
+wire       ra_lo  = ~&cpuba0_dsn[1:0];
+wire       ra_wr  = cpuba0_we && cpuba0_ok_match && cpuba0_addr[23:19]==5'h12 && ra_hit;
+
+jtcps3_ra_map u_ra_map(
+    .page   ( cpuba0_addr[18:10] ),
+    .hit    ( ra_hit             ),
+    .slot   ( ra_slot            )
+);
+
+always @(posedge clk) begin
+    if (rst) begin
+        ra_we   <= 2'b00;
+        ra_addr <= 16'd0;
+        ra_din  <= 16'd0;
+    end else begin
+        ra_addr <= { 1'b0, ra_slot, cpuba0_addr[9:2], ~ra_lo, 1'b0 };
+        ra_din  <= ra_lo ? cpuba0_din[15:0] : cpuba0_din[31:16];
+        ra_we   <= {2{ra_wr}} & ~(ra_lo ? cpuba0_dsn[1:0] : cpuba0_dsn[3:2]);
+    end
+end
+
 always @(posedge clk) begin
     cab_dout    <= (A[2] ? cab_hi : cab_lo);
     scsi_data_l <= scsi_data;
@@ -643,6 +679,9 @@ jtsh7604 #(
         cpuba0_we   = 1'b0;
         cpuba0_din  = 32'd0;
         cpuba0_dsn  = 4'hf;
+        ra_addr     = 16'd0;
+        ra_din      = 16'd0;
+        ra_we       = 2'd0;
         fram_cs     = 0;
         cram_cs     = 0;
         ppu_cs      = 0;

@@ -1081,7 +1081,7 @@ wire        mux_rd, mux_we, mux_busy;
     wire [ 7:0] ra_burstcnt, ra_be;
     wire [28:0] ra_addr;
     wire [63:0] ra_din;
-    wire        ra_we, ra_active;
+    wire        ra_we, ra_active, ra_ddr_busy;
     wire [14:0] ra_wr_word;
     wire [15:0] ra_wr_din;
     wire [ 1:0] ra_wr_be;
@@ -1112,7 +1112,7 @@ wire        mux_rd, mux_we, mux_busy;
         .wr_din     ( ra_wr_din         ),
         .wr_be      ( ra_wr_be          ),
         .active     ( ra_active         ),
-        .ddr_busy   ( mux_busy          ),
+        .ddr_busy   ( ra_ddr_busy       ),
         .ddr_burstcnt( ra_burstcnt      ),
         .ddr_addr   ( ra_addr           ),
         .ddr_we     ( ra_we             ),
@@ -1120,6 +1120,62 @@ wire        mux_rd, mux_we, mux_busy;
         .ddr_din    ( ra_din            )
     );
 
+`ifdef JTFRAME_RA_DDR_ARB
+    // JTFRAME_RA_DDR_ARB: the video client also uses DDR during VBlank (the
+    // DDR line-frame buffer reads a line at every HBlank and writes lines as
+    // the game renders them), so the port cannot simply be taken when VBlank
+    // starts: that could cut a burst in half. The port changes hands only at
+    // transaction boundaries. The mirror gets it when the video client has no
+    // write burst open, no read data outstanding and no request pending, keeps
+    // it for one burst (at most 32 beats), then gives it back. The video
+    // client, which has real-time needs, wins whenever it is requesting.
+    reg        ra_own;
+    reg  [7:0] ra_left, rot_wleft;
+    reg  [9:0] rot_rleft;
+    wire       ra_beat   =  ra_own && ra_we  && !mux_busy;
+    wire       rot_wbeat = !ra_own && rot_we && !mux_busy;
+    wire       rot_rreq  = !ra_own && rot_rd && !mux_busy;
+    wire       rot_idle  = rot_wleft==0 && rot_rleft==0 && !rot_we && !rot_rd;
+    wire [9:0] rot_rsub  = { 9'd0, DDRAM_DOUT_READY && rot_rleft!=0 };
+
+    always @(posedge clk_rom, posedge rst) begin
+        if( rst ) begin
+            ra_own    <= 0;
+            ra_left   <= 0;
+            rot_wleft <= 0;
+            rot_rleft <= 0;
+        end else begin
+            if( ioctl_rom ) begin // the video client is reset during downloads
+                rot_wleft <= 0;
+                rot_rleft <= 0;
+            end else begin
+                if( rot_wbeat )
+                    rot_wleft <= rot_wleft==0 ? rot_burstcnt-8'd1 : rot_wleft-8'd1;
+                rot_rleft <= rot_rleft - rot_rsub + (rot_rreq ? { 2'd0, rot_burstcnt } : 10'd0);
+            end
+            if( ra_beat ) begin
+                if( ra_left==0 ) begin // first beat of a burst
+                    ra_left <= ra_burstcnt-8'd1;
+                    if( ra_burstcnt==8'd1 ) ra_own <= 0;
+                end else begin
+                    ra_left <= ra_left-8'd1;
+                    if( ra_left==8'd1 ) ra_own <= 0;
+                end
+            end else if( !ra_own && ra_we && rot_idle ) begin
+                ra_own <= 1;
+            end
+        end
+    end
+
+    assign mux_burstcnt = ra_own ? ra_burstcnt : rot_burstcnt;
+    assign mux_addr     = ra_own ? ra_addr     : rot_addr;
+    assign mux_rd       = ra_own ? 1'b0        : rot_rd;
+    assign mux_we       = ra_own ? ra_we       : rot_we;
+    assign mux_be       = ra_own ? ra_be       : rot_be;
+    assign mux_din      = ra_own ? ra_din      : rot_din;
+    assign rot_busy     = mux_busy | ra_own;
+    assign ra_ddr_busy  = mux_busy | ~ra_own;
+`else
     assign mux_burstcnt = ra_active ? ra_burstcnt : rot_burstcnt;
     assign mux_addr     = ra_active ? ra_addr     : rot_addr;
     assign mux_rd       = ra_active ? 1'b0        : rot_rd;
@@ -1127,6 +1183,8 @@ wire        mux_rd, mux_we, mux_busy;
     assign mux_be       = ra_active ? ra_be       : rot_be;
     assign mux_din      = ra_active ? ra_din      : rot_din;
     assign rot_busy     = mux_busy | ra_active;
+    assign ra_ddr_busy  = mux_busy;
+`endif
 `else
     assign mux_burstcnt = rot_burstcnt;
     assign mux_addr     = rot_addr;

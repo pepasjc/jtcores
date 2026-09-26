@@ -5,6 +5,11 @@ params:
   # 0x880000-0x8FFFFF bytes -> sprite RAM (512kB)
   # 0x900000-0x97FFFF bytes -> RAM (512kB)
   - { name: SPRRAM,       value: 23'h4_40000 }
+# RetroAchievements tap driven by jtcps3_main (main RAM pages, see jtcps3_ra_map.v)
+ports:
+  - { name: ra_game_addr, msb: 15 }
+  - { name: ra_game_din,  msb: 15 }
+  - { name: ra_game_we,   msb: 1 }
 clocks:
   clk:
     - freq: 16 MHz

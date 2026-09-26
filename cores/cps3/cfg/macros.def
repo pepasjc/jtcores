@@ -39,3 +39,13 @@ JTFRAME_EASY_STA
 # sidi128: unstable due to timing errors inside SH-2 CPU see cps3/issues/67
 # sidi128: support for 128MB SDRAM not done
 JTFRAME_SKIP
+
+[mister]
+# RetroAchievements: SH-2 main RAM writes tapped in jtcps3_main on the CPU side
+# of the write-back cpuba0 lane, 31 x 1 kB pages mapped by jtcps3_ra_map (32 kB
+# shadow). The DDR line-frame buffer also uses DDR during VBlank, so the mirror
+# arbitrates for the port burst by burst (JTFRAME_RA_DDR_ARB).
+JTFRAME_RA_MIRROR
+JTFRAME_RA_TAP
+JTFRAME_RA_AW=15
+JTFRAME_RA_DDR_ARB
